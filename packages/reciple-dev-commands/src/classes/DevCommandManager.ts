@@ -9,14 +9,14 @@ export class DevCommandManager implements RecipleModuleScript {
 
     public client!: RecipleClient;
     public logger?: Logger;
-    public devGuilds: string[] = [];
+    public devGuilds?: string[];
     public devUsers?: string[];
 
     public async onStart(client: RecipleClient<false>): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'DevCommands' });
 
-        if (process.env.DEV_GUILD) this.devGuilds.push(...process.env.DEV_GUILD.split(' '));
+        if (!this.devGuilds && process.env.DEV_GUILD) this.devGuilds = process.env.DEV_GUILD.split(' ');
 
         return true;
     }
@@ -29,13 +29,13 @@ export class DevCommandManager implements RecipleModuleScript {
         const applicationCommands = this.devCommands.filter(c => c.commandType !== CommandType.MessageCommand) as (ContextMenuCommandBuilder|SlashCommandBuilder)[];
 
         client.once('recipleRegisterApplicationCommands', () => {
-            client.commands.add(applicationCommands);
+            client.commands.add(this.devCommands);
 
             this.logger?.log(`Loaded (${applicationCommands.length}) dev application command(s)`);
             this.logger?.log(`Loaded (${this.devCommands.length - applicationCommands.length}) dev message command(s)`);
         });
 
-        for (const guildId of this.devGuilds) {
+        for (const guildId of (this.devGuilds ?? [])) {
             await client.application.commands.set(applicationCommands, guildId);
             this.logger?.log(`Registered (${applicationCommands.length}) dev commands to ${guildId}`);
         }
@@ -73,15 +73,15 @@ export class DevCommandManager implements RecipleModuleScript {
                 continue;
             }
 
+            const originalExecute = command.execute;
             const execute: MessageCommandExecuteFunction = (data: MessageCommandExecuteData) => {
-                if (data.message.inGuild() && !this.devGuilds.includes(data.message.guildId)) return;
+                if (data.message.inGuild() && !(this.devGuilds ?? []).includes(data.message.guildId)) return;
                 if (this.devUsers && !this.devUsers.includes(data.message.author.id)) return;
 
-                return command.execute ? command.execute(data) : undefined;
+                return originalExecute ? originalExecute(data) : undefined;
             };
 
-            command.execute = execute;
-            commands.push(MessageCommandBuilder.resolve(command));
+            commands.push(MessageCommandBuilder.resolve(command).setExecute(execute));
         }
 
         return commands;
