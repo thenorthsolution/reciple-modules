@@ -1,0 +1,23 @@
+{
+  "name": "reciple-modules",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "clean": "npx rimraf ./packages/*/dist ./packages/*/bin",
+    "build": "npm run clean && npx lerna run build",
+    "test": "npx reciple ./test"
+  },
+  "devDependencies": {
+    "@reciple/client": "^7.5.4",
+    "@types/node": "^20.1.4",
+    "lerna": "^6.6.2",
+    "reciple": "^7.6.5",
+    "rimraf": "^5.0.0",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@reciple/npm-loader": "^7.0.4"
+  }
+}

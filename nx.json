@@ -1,0 +1,39 @@
+{
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "docs"
+        ]
+      }
+    }
+  },
+  "targetDefaults": {
+    "build": {
+      "dependsOn": [
+        "^build"
+      ],
+      "outputs": [
+        "{projectRoot}/dist",
+        "{projectRoot}/bin"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*"
+      ]
+    },
+    "docs": {
+      "dependsOn": [
+        "build",
+        "^docs"
+      ],
+      "outputs": [
+        "{projectRoot}/docs/docs.json"
+      ],
+      "inputs": [
+        "{projectRoot}/src/**/*"
+      ]
+    }
+  }
+}
