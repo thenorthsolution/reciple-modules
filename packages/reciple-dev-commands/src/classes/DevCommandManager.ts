@@ -4,7 +4,9 @@ import { readFileSync } from 'fs';
 import path from 'path';
 
 export class DevCommandManager implements RecipleModuleScript {
-    readonly versions: string = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8')).peerDependencies['@reciple/client'];
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+    readonly moduleName: string = this.packageJson.name;
+    readonly versions: string = this.packageJson.peerDependencies['@reciple/client'];
     readonly devCommands: AnyCommandBuilder[] = [];
 
     public client!: RecipleClient;
