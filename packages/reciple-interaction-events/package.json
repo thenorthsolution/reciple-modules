@@ -1,0 +1,31 @@
+{
+    "name": "reciple-interaction-events",
+    "description": "Easily handle Reciple interaction events",
+    "version": "1.0.1",
+    "license": "MIT",
+    "main": "./dist/index.js",
+    "module": "./dist/esm.mjs",
+    "types": "./dist/index.d.ts",
+    "recipleModule": "./dist/index.js",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/esm.mjs",
+            "require": "./dist/index.js"
+        }
+    },
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "keywords": [
+        "reciple-module"
+    ],
+    "scripts": {
+        "clean": "npx rimraf ./dist",
+        "build": "npx tsc"
+    },
+    "peerDependencies": {
+        "@reciple/client": "^7.5.4"
+    }
+}

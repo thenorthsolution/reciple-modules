@@ -14,9 +14,14 @@ export class DevCommandManager implements RecipleModuleScript {
     public devGuilds?: string[];
     public devUsers?: string[];
 
+    constructor(options?: { devGuilds?: string[]; devUsers: string[] }) {
+        this.devGuilds = options?.devGuilds;
+        this.devUsers = options?.devUsers;
+    }
+
     public async onStart(client: RecipleClient<false>): Promise<boolean> {
         this.client = client;
-        this.logger = client.logger?.clone({ name: 'DevCommands' });
+        this.logger = client.logger?.clone({ name: 'DevCommandManager' });
 
         if (!this.devGuilds && process.env.DEV_GUILD) this.devGuilds = process.env.DEV_GUILD.split(' ');
 
