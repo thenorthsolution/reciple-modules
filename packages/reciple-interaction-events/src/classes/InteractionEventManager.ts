@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
+import { InteractionEventListenerError } from './InteractionEventListenerError';
 
 export class InteractionEventManager implements RecipleModuleScript {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
@@ -42,14 +43,22 @@ export class InteractionEventManager implements RecipleModuleScript {
             for (const listener of script.interactionListeners) {
                 if (listener.type !== commandType) continue;
 
-                if (this.isAnyCommandInteractionListener(listener)) {
-                    if (!await this.satisfiesCommandName(interaction as AnyCommandInteraction, listener)) continue;
-                } else if (this.isAnyComponentInteractionListener(listener)) {
-                    if (!await this.satisfiesCustomId(interaction as AnyComponentInteraction, listener)) continue;
-                }
+                try {
+                    if (this.isAnyCommandInteractionListener(listener)) {
+                        if (!await this.satisfiesCommandName(interaction as AnyCommandInteraction, listener)) continue;
+                    } else if (this.isAnyComponentInteractionListener(listener)) {
+                        if (!await this.satisfiesCustomId(interaction as AnyComponentInteraction, listener)) continue;
+                    }
 
-                // @ts-expect-error Never type
-                await Promise.resolve(listener.execute(interaction));
+                    // @ts-expect-error Never type
+                    await Promise.resolve(listener.execute(interaction));
+                } catch(err) {
+                    this.client._throwError(new InteractionEventListenerError({
+                        message: 'An error occured while executing an interaction event listener.',
+                        cause: err,
+                        listenerType: InteractionListenerType[listener.type] as keyof typeof InteractionListenerType
+                    }))
+                }
             }
         }
     }
