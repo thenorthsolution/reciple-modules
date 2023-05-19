@@ -20,24 +20,14 @@ npm i @reciple/npm-loader reciple-dev-commands
 ```bash
 npm i reciple-dev-commands
 ```
-<details>
-    <summary>Simple export method</summary>
 
-```js
-export * from 'reciple-dev-commands';
-```
-</details>
-
-<details>
-    <summary>Advanced export method</summary>
+Create a new module and export a new class instance of `DevCommandManager`.
 
 ```js
 import { DevCommandManager } from 'reciple-dev-commands';
 
-export class DevCommands extends DevCommandManager {
-    this.devGuilds = ['0000000000000000000'];
-}
-
-export default new DevCommands();
+export default new DevCommandManager({
+    devGuilds: ['0000000000000000000'],
+    devUsers: ['0000000000000000000']
+});
 ```
-</details>

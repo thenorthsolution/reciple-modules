@@ -15,29 +15,16 @@ Easily handle Reciple interaction events
 npm i @reciple/npm-loader reciple-interaction-events
 ```
 
-### Module Export Method
+### Export Method
 
 ```bash
 npm i reciple-interaction-events
 ```
-<details>
-    <summary>Simple export method</summary>
 
-```js
-export * from 'reciple-interaction-events';
-```
-</details>
-
-<details>
-    <summary>Advanced export method</summary>
+Create a new module and export a new class instance of `InteractionEventManager`.
 
 ```js
 import { InteractionEventManager } from 'reciple-interaction-events';
 
-export class InteractionEvents extends InteractionEventManager {
-    // Modify class behaviour
-}
-
-export default new InteractionEvents();
+export default new InteractionEventManager();
 ```
-</details>
