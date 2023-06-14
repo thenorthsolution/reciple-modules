@@ -27,5 +27,8 @@
     },
     "peerDependencies": {
         "@reciple/client": "^7.5.4"
+    },
+    "dependencies": {
+        "fallout-utility": "^2.5.1"
     }
 }

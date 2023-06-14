@@ -1,5 +1,6 @@
-import { Logger, RecipleClient, RecipleModule, RecipleModuleScript, RecipleModuleScriptUnloadData } from '@reciple/client';
+import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
 import { AttachmentBuilder, BaseMessageOptions, codeBlock, EmbedBuilder, escapeCodeBlock, Message, TextBasedChannel } from 'discord.js';
+import { limitString } from 'fallout-utility';
 import { inspect } from 'util';
 
 export class RecipleCrashHandler implements RecipleModuleScript {
@@ -23,7 +24,7 @@ export class RecipleCrashHandler implements RecipleModuleScript {
         return true;
     }
 
-    public async onLoad(client: RecipleClient<true>, module: RecipleModule): Promise<void> {
+    public async onLoad(): Promise<void> {
         this.client.on('error', this._eventListener);
         this.client.on('shardError', this._eventListener);
         this.client.on('recipleError', this._eventListener);
@@ -35,7 +36,7 @@ export class RecipleCrashHandler implements RecipleModuleScript {
         this.logger?.log(`Listening to process error events!`);
     }
 
-    public async onUnload(unloadData: RecipleModuleScriptUnloadData): Promise<void> {
+    public async onUnload(): Promise<void> {
         this.client.removeListener('error', this._eventListener);
         this.client.removeListener('shardError', this._eventListener);
         this.client.removeListener('recipleError', this._eventListener);
@@ -69,7 +70,7 @@ export class RecipleCrashHandler implements RecipleModuleScript {
     public createReportMessageOptions(reason: any): BaseMessageOptions {
         const embed = new EmbedBuilder()
             .setAuthor({ name: `Anticrash report` })
-            .setTitle(String(reason))
+            .setTitle(limitString(String(reason), 100))
             .setColor('Red')
             .setTimestamp();
 
