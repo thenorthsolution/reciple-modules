@@ -14,7 +14,7 @@ export class DevCommandManager implements RecipleModuleScript {
     public devGuilds?: string[];
     public devUsers?: string[];
 
-    constructor(options?: { devGuilds?: string[]; devUsers: string[] }) {
+    constructor(options?: { devGuilds?: string[]; devUsers?: string[] }) {
         this.devGuilds = options?.devGuilds;
         this.devUsers = options?.devUsers;
     }
