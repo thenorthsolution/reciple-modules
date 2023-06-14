@@ -24,5 +24,16 @@
     "scripts": {
         "clean": "npx rimraf ./dist",
         "build": "npx tsc"
+    },
+    "peerDependencies": {
+        "@reciple/client": "^7.7.1"
+    },
+    "peerDependenciesMeta": {
+        "@reciple/client": {
+            "optional": true
+        }
+    },
+    "dependencies": {
+        "fallout-utility": "^2.5.1"
     }
 }

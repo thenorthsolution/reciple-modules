@@ -27,5 +27,13 @@
     },
     "dependencies": {
         "fallout-utility": "^2.5.1"
+    },
+    "peerDependencies": {
+        "@reciple/client": "^7.7.1"
+    },
+    "peerDependenciesMeta": {
+        "@reciple/client": {
+            "optional": true
+        }
     }
 }

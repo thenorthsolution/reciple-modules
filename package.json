@@ -10,10 +10,11 @@
     "test": "npx reciple ./test"
   },
   "devDependencies": {
-    "@reciple/client": "^7.7.0",
+    "@reciple/client": "^7.7.1",
     "@types/node": "^20.1.4",
+    "discord.js": "^14.11.0",
     "lerna": "^7.0.1",
-    "reciple": "^7.8.0",
+    "reciple": "^7.8.1",
     "rimraf": "^5.0.1",
     "typescript": "^5.1.3"
   },
