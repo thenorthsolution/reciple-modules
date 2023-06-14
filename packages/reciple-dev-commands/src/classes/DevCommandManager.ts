@@ -93,7 +93,7 @@ export class DevCommandManager implements RecipleModuleScript {
             if (!commandData || !commandData.name) return;
 
             const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
-            const devCommand = client.commands.messageCommands.get(commandData.name);
+            const devCommand = this.messageCommands.get(commandData.name);
 
             if (!devCommand) return;
             if (clientCommand && devCommand) {
@@ -107,7 +107,7 @@ export class DevCommandManager implements RecipleModuleScript {
         client.on('interactionCreate', async interaction => {
             if (interaction.isChatInputCommand()) {
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.SlashCommand);
-                const devCommand = client.commands.slashCommands.get(interaction.commandName);
+                const devCommand = this.slashCommands.get(interaction.commandName);
 
                 if (!devCommand) return;
                 if (clientCommand && devCommand) {
@@ -118,7 +118,7 @@ export class DevCommandManager implements RecipleModuleScript {
                 await SlashCommandBuilder.execute(this.client, interaction, devCommand);
             } else if (interaction.isContextMenuCommand()) {
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
-                const devCommand = client.commands.contextMenuCommands.get(interaction.commandName);
+                const devCommand = this.contextMenuCommands.get(interaction.commandName);
 
                 if (!devCommand) return;
                 if (clientCommand && devCommand) {
