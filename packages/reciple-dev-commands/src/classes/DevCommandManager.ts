@@ -1,11 +1,23 @@
-import { AnyCommandBuilder, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteData, MessageCommandExecuteFunction, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
+import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteData, MessageCommandExecuteFunction, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
 import { readFileSync } from 'fs';
 import path from 'path';
-import { Collection } from 'discord.js';
-import { getCommand } from 'fallout-utility';
+import { ApplicationCommand, Collection } from 'discord.js';
+import { TypedEmitter, getCommand } from 'fallout-utility';
 
-export class DevCommandManager implements RecipleModuleScript {
+export interface DevCommandManagerOptions {
+    prefix?: string;
+    argSeparator?: string;
+    devGuilds?: string[];
+    devUsers?: string[];
+}
+
+export interface DevCommandManagerEvents {
+    registerApplicationCommands: [commands: ApplicationCommand, guildId: string];
+    commandExecute: [command: AnyCommandExecuteData];
+}
+
+export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleScript {
     private _prefix?: string;
     private _argSeparator?: string;
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
@@ -36,7 +48,9 @@ export class DevCommandManager implements RecipleModuleScript {
     set prefix(value: string|undefined|null) { this._prefix = value || undefined; }
     set argSeparator(value: string|undefined|null) { this._argSeparator = value || undefined; }
 
-    constructor(options?: { prefix?: string; argSeparator?: string; devGuilds?: string[]; devUsers?: string[] }) {
+    constructor(options?: DevCommandManagerOptions) {
+        super();
+
         this.prefix = options?.prefix;
         this.argSeparator = options?.argSeparator;
         this.devGuilds = options?.devGuilds;
@@ -75,7 +89,9 @@ export class DevCommandManager implements RecipleModuleScript {
 
         client.modules.once('loadedModules', async () => {
             for (const guildId of (this.devGuilds ?? [])) {
-                await client.application.commands.set(applicationCommands, guildId);
+                const commands = await client.application.commands.set(applicationCommands, guildId);
+
+                this.emit('registerApplicationCommands', commands, guildId);
                 this.logger?.log(`Registered (${applicationCommands.length}) dev commands to ${guildId}`);
             }
 
@@ -101,7 +117,7 @@ export class DevCommandManager implements RecipleModuleScript {
                 return;
             }
 
-            await MessageCommandBuilder.execute(client, message, this.prefix, this.argSeparator, devCommand);
+            this.emit('commandExecute', await MessageCommandBuilder.execute(client, message, this.prefix, this.argSeparator, devCommand));
         });
 
         client.on('interactionCreate', async interaction => {
@@ -115,7 +131,7 @@ export class DevCommandManager implements RecipleModuleScript {
                     return;
                 }
 
-                await SlashCommandBuilder.execute(this.client, interaction, devCommand);
+                this.emit('commandExecute', await SlashCommandBuilder.execute(this.client, interaction, devCommand));
             } else if (interaction.isContextMenuCommand()) {
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
                 const devCommand = this.contextMenuCommands.get(interaction.commandName);
@@ -126,7 +142,7 @@ export class DevCommandManager implements RecipleModuleScript {
                     return;
                 }
 
-                await ContextMenuCommandBuilder.execute(this.client, interaction, devCommand);
+                this.emit('commandExecute', await ContextMenuCommandBuilder.execute(this.client, interaction, devCommand));
             }
         });
     }
