@@ -10,8 +10,8 @@ export class RecipleCrashHandler implements RecipleModuleScript {
 
     public reportChannels: string[];
 
-    constructor(reportChannels?: string[]) {
-        this.reportChannels = reportChannels ?? [];
+    constructor(reportChannels?: (string|{ id: string; })[]) {
+        this.reportChannels = (reportChannels ?? []).map(c => typeof c === 'string' ? c : c.id).filter(Boolean);
 
         this.report = this.report.bind(this);
         this._eventListener = this._eventListener.bind(this);
