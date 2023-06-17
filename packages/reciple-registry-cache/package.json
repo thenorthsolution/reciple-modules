@@ -1,7 +1,7 @@
 {
-    "name": "reciple-interaction-events",
-    "description": "Easily handle Reciple interaction events",
-    "version": "1.1.0",
+    "name": "reciple-registry-cache",
+    "description": "Cache application commands to prevent register api spam",
+    "version": "1.0.0",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
@@ -26,10 +26,14 @@
         "build": "npx tsc"
     },
     "peerDependencies": {
-        "@reciple/client": "^7.7.1"
+        "@reciple/client": "^7.7.1",
+        "reciple-dev-commands": "1.2.0"
     },
     "peerDependenciesMeta": {
         "@reciple/client": {
+            "optional": true
+        },
+        "reciple-dev-commands": {
             "optional": true
         }
     }

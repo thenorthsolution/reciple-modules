@@ -1,10 +1,13 @@
-const { RecipleNPMLoader } = require("@reciple/npm-loader");
-const { RecipleClient, cli, MessageCommandBuilder, SlashCommandBuilder } = require("reciple");
-const { ComponentType, TextInputBuilder, TextInputStyle } = require('discord.js');
-const { InteractionListenerType } = require('reciple-interaction-events');
-const path = require("path");
+import { InteractionListenerType } from 'reciple-interaction-events';
+import { RecipleNPMLoader } from "@reciple/npm-loader";
+import { RecipleClient, cli } from "reciple";
+import path from "path";
+import { fileURLToPath } from 'url';
 
-class NPMLoader extends RecipleNPMLoader {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+export class NPMLoader extends RecipleNPMLoader {
     get cwd() { return cli.cwd; }
 
     /**
@@ -33,7 +36,4 @@ class NPMLoader extends RecipleNPMLoader {
     }
 }
 
-module.exports = {
-    NPMLoader,
-    default: new NPMLoader()
-}
+export default new NPMLoader()

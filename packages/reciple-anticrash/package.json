@@ -6,7 +6,7 @@
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
     "types": "./dist/index.d.ts",
-    "recipleModule": "./dist/index.js",
+    "recipleModule": "./dist/esm.mjs",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
