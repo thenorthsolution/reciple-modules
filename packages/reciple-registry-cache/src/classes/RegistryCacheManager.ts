@@ -42,7 +42,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
         const DevCommandManager = await import('reciple-dev-commands').then(data => data.DevCommandManager).catch(() => null);
         this._DevCommandManager = DevCommandManager ?? null;
 
-        this.client.modules.on('loadedModules', async () => this.checkRegistryCache());
+        await this.checkRegistryCache();
     }
 
     public async checkRegistryCache(): Promise<void> {
