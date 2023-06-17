@@ -89,7 +89,15 @@ export class RecipleCrashHandler implements RecipleModuleScript {
 
     public async getTextChannelFromId(id: string): Promise<TextBasedChannel|null> {
         const channel = this.client.channels.cache.get(id) ?? await this.client.channels.fetch(id).catch(() => null);
-        return channel?.isTextBased() ? channel : null;
+        if (channel) return channel?.isTextBased() ? channel : null;
+
+        const userDm = !channel
+            ? (this.client.users.cache.get(id) || await this.client.users.fetch(id).catch(() => null))
+            : null;
+
+        if (userDm) return userDm.dmChannel;
+
+        return null;
     }
 
     private async _eventListener(err: any): Promise<void> {
