@@ -27,7 +27,7 @@
     },
     "peerDependencies": {
         "@reciple/client": "^7.7.1",
-        "reciple-registry-cache": "1.0.0"
+        "reciple-registry-cache": "^1.0.0"
     },
     "peerDependenciesMeta": {
         "@reciple/client": {
@@ -41,6 +41,6 @@
         "fallout-utility": "^2.5.1"
     },
     "devDependencies": {
-        "reciple-registry-cache": "1.0.0"
+        "reciple-registry-cache": "^1.0.0"
     }
 }
