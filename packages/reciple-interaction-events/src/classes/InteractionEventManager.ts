@@ -4,6 +4,7 @@ import path from 'path';
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
+import { isJSONEncodable } from 'discord.js';
 
 export class InteractionEventManager implements RecipleModuleScript {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
@@ -40,7 +41,10 @@ export class InteractionEventManager implements RecipleModuleScript {
         for (const script of scripts) {
             if (!script.interactionListeners?.length) continue;
 
-            for (const listener of script.interactionListeners) {
+            const listeners = script.interactionListeners.map(l => isJSONEncodable(l) ? l.toJSON() : l);
+
+            for (const listener of listeners) {
+
                 if (listener.type !== commandType) continue;
 
                 try {
