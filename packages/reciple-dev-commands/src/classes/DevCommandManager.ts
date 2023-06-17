@@ -4,12 +4,18 @@ import { readFileSync } from 'fs';
 import path from 'path';
 import { ApplicationCommand, Collection } from 'discord.js';
 import { TypedEmitter, getCommand } from 'fallout-utility';
+import type { RegistryCacheManager } from 'reciple-registry-cache';
 
 export interface DevCommandManagerOptions {
     prefix?: string;
     argSeparator?: string;
     devGuilds?: string[];
     devUsers?: string[];
+    /**
+     * Ignores cache when [reciple-registry-cache](https://npmjs.org/package/reciple-registry-cache) is installed
+     * @default false
+     */
+    ignoreCommandsCacheRegister?: boolean;
 }
 
 export interface DevCommandManagerEvents {
@@ -36,6 +42,15 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
     public logger?: Logger;
     public devGuilds?: string[];
     public devUsers?: string[];
+    public ignoreCommandsCacheRegister: boolean = false;
+
+    public registryCacheManager: RegistryCacheManager|null = null;
+
+    get isCommandsCached() {
+        if (this.registryCacheManager === null) return false;
+
+        return this.registryCacheManager.isCommandsCached;
+    }
 
     get prefix(): string {
         return this._prefix ?? this.client.config.commands?.messageCommand?.prefix ?? '!';
@@ -55,6 +70,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         this.argSeparator = options?.argSeparator;
         this.devGuilds = options?.devGuilds;
         this.devUsers = options?.devUsers;
+        this.ignoreCommandsCacheRegister = options?.ignoreCommandsCacheRegister ?? false;
     }
 
     public async onStart(client: RecipleClient<false>): Promise<boolean> {
@@ -67,7 +83,14 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
     }
 
     public async onLoad(client: RecipleClient<true>): Promise<void> {
-        for (const [id, mdule] of client.modules.modules) {
+        const RegistryCacheManager = await import('reciple-registry-cache').then(data => data.RegistryCacheManager).catch(() => null);
+
+        if (RegistryCacheManager) {
+            const registryCacheManagerModule = client.modules.cache.find(m => m.script instanceof RegistryCacheManager && m.script.moduleName === 'reciple-registry-cache');
+            this.registryCacheManager = registryCacheManagerModule?.script as RegistryCacheManager ?? null;
+        }
+
+        for (const [id, mdule] of client.modules.cache) {
             const devCommands = await this.getModuleDevCommands(mdule.script);
 
             for (const command of devCommands) {
@@ -88,11 +111,26 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         const applicationCommands = [...this.contextMenuCommands.values(), ...this.slashCommands.values()];
 
         client.modules.once('loadedModules', async () => {
-            for (const guildId of (this.devGuilds ?? [])) {
-                const commands = await client.application.commands.set(applicationCommands, guildId);
+            await new Promise((res, rej) => {
+                let timer: NodeJS.Timer|null = null;
 
-                this.emit('registerApplicationCommands', commands, guildId);
-                this.logger?.log(`Registered (${applicationCommands.length}) dev commands to ${guildId}`);
+                setInterval(() => {
+                    if (this.registryCacheManager && this.registryCacheManager.lastRegistryCheck === null) return;
+                    if (timer) clearInterval(timer);
+
+                    res(this.isCommandsCached);
+                }, 100);
+            });
+
+            if (!this.isCommandsCached) {
+                for (const guildId of (this.devGuilds ?? [])) {
+                    const commands = await client.application.commands.set(applicationCommands, guildId);
+
+                    this.emit('registerApplicationCommands', commands, guildId);
+                    this.logger?.log(`Registered (${applicationCommands.length}) dev commands to ${guildId}`);
+                }
+            } else {
+                this.logger?.warn(`Dev commands are cached! Skipping application command register...`);
             }
 
             this.logger?.log(`Loaded (${this.contextMenuCommands.size}) context menu command(s)`);

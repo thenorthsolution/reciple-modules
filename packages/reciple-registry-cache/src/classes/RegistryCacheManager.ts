@@ -16,10 +16,13 @@ export class RegistryCacheManager implements RecipleModuleScript {
 
     private _isCommandsCached: boolean = false;
     private _DevCommandManager: typeof DevCommandManager|null = null;
+    private _loggedWarning: boolean = false;
 
     public devCommandsManager?: DevCommandManager;
     public cacheFolder: string = path.join(__dirname, '../../.cache/');
     public client!: RecipleClient;
+
+    public lastRegistryCheck: Date|null = null;
 
     get registryCacheFile() {
         return path.join(this.cacheFolder, this.client.user?.id ?? randomBytes(10).toString('hex'));
@@ -39,7 +42,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
         const DevCommandManager = await import('reciple-dev-commands').then(data => data.DevCommandManager).catch(() => null);
         this._DevCommandManager = DevCommandManager ?? null;
 
-        this.client.modules.once('loadedModules', async () => this.checkRegistryCache());
+        this.client.modules.on('loadedModules', async () => this.checkRegistryCache());
     }
 
     public async checkRegistryCache(): Promise<void> {
@@ -61,7 +64,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
         const data = this.encodeCommandsData(commands);
 
         if (await this.isEqualToCache(data)) {
-            this.client.logger?.warn(`Application commands did not change! Skipping command register...`);
+            if (!this._loggedWarning) this.client.logger?.warn(`Application commands did not change! Skipping command register...`);
 
             this.client.config.applicationCommandRegister = {
                 ...this.client.config.applicationCommandRegister,
@@ -69,6 +72,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
             };
 
             this._isCommandsCached = true;
+            this._loggedWarning ||= true;
         }
 
         await this.updateLastCache(data);
@@ -81,6 +85,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
             slashCommands: this.client.config.commands?.slashCommand,
             applicationCommandRegister: this.client.config.applicationCommandRegister,
             userId: this.client.user?.id,
+            devCommandsGuilds: this.devCommandsManager?.devGuilds ?? [],
             commands: inspect(commands, { depth: 5 })
         };
 
@@ -88,6 +93,8 @@ export class RegistryCacheManager implements RecipleModuleScript {
     }
 
     public async isEqualToCache(data: string): Promise<boolean> {
+        this.lastRegistryCheck = new Date();
+
         const cachedId = await this.resolveLastCache();
         if (cachedId === undefined) return false;
 

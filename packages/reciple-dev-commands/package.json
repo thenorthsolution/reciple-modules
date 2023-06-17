@@ -26,14 +26,21 @@
         "build": "npx tsc"
     },
     "peerDependencies": {
-        "@reciple/client": "^7.7.1"
+        "@reciple/client": "^7.7.1",
+        "reciple-registry-cache": "1.0.0"
     },
     "peerDependenciesMeta": {
         "@reciple/client": {
+            "optional": true
+        },
+        "reciple-registry-cache": {
             "optional": true
         }
     },
     "dependencies": {
         "fallout-utility": "^2.5.1"
+    },
+    "devDependencies": {
+        "reciple-registry-cache": "1.0.0"
     }
 }
