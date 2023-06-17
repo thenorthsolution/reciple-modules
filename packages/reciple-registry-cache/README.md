@@ -21,10 +21,10 @@ npm i @reciple/npm-loader reciple-registry-cache
 npm i reciple-registry-cache
 ```
 
-Create a new module and export a new class instance of `InteractionEventManager`.
+Create a new module and export a new class instance of `RegistryCacheManager`.
 
 ```js
-import { InteractionEventManager } from 'reciple-registry-cache';
+import { RegistryCacheManager } from 'reciple-registry-cache';
 
-export default new InteractionEventManager();
+export default new RegistryCacheManager();
 ```
