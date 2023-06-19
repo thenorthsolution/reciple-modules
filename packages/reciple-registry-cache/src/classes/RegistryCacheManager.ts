@@ -52,10 +52,9 @@ export class RegistryCacheManager implements RecipleModuleScript {
             const DevCommandManager = this._DevCommandManager;
 
             const devCommandsModule = this.client.modules.cache.find(m => m.script instanceof DevCommandManager && m.script.moduleName === 'reciple-dev-commands');
+            this.devCommandsManager = devCommandsModule?.script as DevCommandManager|undefined;
 
-            this.devCommandsManager = devCommandsModule?.script as DevCommandManager;
-
-            devCommands = [...this.devCommandsManager.contextMenuCommands.values(), ...this.devCommandsManager.slashCommands.values()].map(c => c.toJSON());
+            if (this.devCommandsManager) devCommands = [...this.devCommandsManager.contextMenuCommands.values(), ...this.devCommandsManager.slashCommands.values()].map(c => c.toJSON());
         }
 
         const commands = [...this.client.commands.contextMenuCommands.toJSON(), ...this.client.commands.slashCommands.toJSON(), ...this.client.commands.additionalApplicationCommands, ...devCommands].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
