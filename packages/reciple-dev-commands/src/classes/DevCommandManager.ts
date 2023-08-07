@@ -164,7 +164,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
             const devCommand = this.messageCommands.get(commandData.name);
 
-            if (!devCommand || (!this.allowExecuteInNonDevGuild && !(message.guildId && this.devGuilds.includes(message.guildId)))) return;
+            if (!devCommand || (!this.allowExecuteInNonDevGuild && (!message.guildId || !this.devGuilds.includes(message.guildId)))) return;
             if (clientCommand && devCommand) {
                 this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
                 return;
@@ -178,7 +178,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.SlashCommand);
                 const devCommand = this.slashCommands.get(interaction.commandName);
 
-                if (!devCommand || (!this.allowExecuteInNonDevGuild && !(interaction.guildId && this.devGuilds.includes(interaction.guildId)))) return;
+                if (!devCommand || (!this.allowExecuteInNonDevGuild && (!interaction.guildId || !this.devGuilds.includes(interaction.guildId)))) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting slash command from client and dev commands: ${devCommand.name}`);
                     return;
@@ -189,7 +189,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
                 const devCommand = this.contextMenuCommands.get(interaction.commandName);
 
-                if (!devCommand || (!this.allowExecuteInNonDevGuild && !(interaction.guildId && this.devGuilds.includes(interaction.guildId)))) return;
+                if (!devCommand || (!this.allowExecuteInNonDevGuild && (!interaction.guildId || !this.devGuilds.includes(interaction.guildId)))) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting context menu command from client and dev commands: ${devCommand.name}`);
                     return;
