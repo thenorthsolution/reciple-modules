@@ -5,20 +5,19 @@
     "packages/*"
   ],
   "scripts": {
-    "clean": "npx rimraf ./packages/*/dist ./packages/*/bin",
-    "build": "npm run clean && npx lerna run build",
+    "build": "npx lerna run build",
     "test": "npx reciple ./test"
   },
   "devDependencies": {
     "@reciple/client": "^7.7.2",
-    "@types/node": "^20.3.1",
-    "discord.js": "^14.11.0",
-    "lerna": "^7.0.2",
-    "reciple": "^7.8.2",
+    "@types/node": "^20.4.8",
+    "discord.js": "^14.12.1",
+    "lerna": "^7.1.4",
+    "reciple": "^7.9.6",
     "rimraf": "^5.0.1",
-    "typescript": "^5.1.3"
+    "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@reciple/npm-loader": "^7.3.2"
+    "@reciple/npm-loader": "^7.4.4"
   }
 }

@@ -23,7 +23,7 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npx tsc"
+        "build": "npm run clean && npx tsc"
     },
     "peerDependencies": {
         "@reciple/client": "^7.7.1"

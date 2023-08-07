@@ -23,7 +23,7 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npx tsc"
+        "build": "npm run clean && npx tsc"
     },
     "dependencies": {
         "fallout-utility": "^2.5.1"
