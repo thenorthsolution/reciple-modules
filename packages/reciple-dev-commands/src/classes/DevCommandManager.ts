@@ -12,6 +12,10 @@ export interface DevCommandManagerOptions {
     devGuilds?: string[];
     devUsers?: string[];
     /**
+     * @default true
+     */
+    allowExecuteInNonDevGuild?: boolean;
+    /**
      * Ignores cache when [reciple-registry-cache](https://npmjs.org/package/reciple-registry-cache) is installed
      * @default false
      */
@@ -40,9 +44,10 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
 
     public client!: RecipleClient;
     public logger?: Logger;
-    public devGuilds?: string[];
-    public devUsers?: string[];
-    public ignoreCommandsCacheRegister: boolean = false;
+    public devGuilds: string[];
+    public devUsers: string[];
+    public allowExecuteInNonDevGuild: boolean;
+    public ignoreCommandsCacheRegister: boolean;
 
     public registryCacheManager: RegistryCacheManager|null = null;
 
@@ -68,8 +73,9 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
 
         this.prefix = options?.prefix;
         this.argSeparator = options?.argSeparator;
-        this.devGuilds = options?.devGuilds;
-        this.devUsers = options?.devUsers;
+        this.devGuilds = options?.devGuilds ?? [];
+        this.devUsers = options?.devUsers ?? [];
+        this.allowExecuteInNonDevGuild = options?.allowExecuteInNonDevGuild ?? true;
         this.ignoreCommandsCacheRegister = options?.ignoreCommandsCacheRegister ?? false;
     }
 
@@ -77,7 +83,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         this.client = client;
         this.logger = client.logger?.clone({ name: 'DevCommandManager' });
 
-        if (!this.devGuilds && process.env.DEV_GUILD) this.devGuilds = process.env.DEV_GUILD.split(' ');
+        if (!this.devGuilds.length && process.env.DEV_GUILD) this.devGuilds = process.env.DEV_GUILD.split(' ');
 
         return true;
     }
@@ -130,7 +136,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                     ...(this.client.config.commands?.additionalApplicationCommands?.registerCommands?.registerToGuilds ?? [])
                 );
 
-                for (const guildId of (this.devGuilds ?? [])) {
+                for (const guildId of (this.devGuilds)) {
                     if (configGuilds.has(guildId)) this.logger?.warn(`Replacing reciple application commands with dev commands on guild ${guildId}`);
 
                     const commands = await client.application.commands.set(applicationCommands, guildId);
@@ -158,7 +164,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
             const devCommand = this.messageCommands.get(commandData.name);
 
-            if (!devCommand) return;
+            if (!devCommand || (!this.allowExecuteInNonDevGuild && !(message.guildId && this.devGuilds.includes(message.guildId)))) return;
             if (clientCommand && devCommand) {
                 this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
                 return;
@@ -172,7 +178,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.SlashCommand);
                 const devCommand = this.slashCommands.get(interaction.commandName);
 
-                if (!devCommand) return;
+                if (!devCommand || (!this.allowExecuteInNonDevGuild && !(interaction.guildId && this.devGuilds.includes(interaction.guildId)))) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting slash command from client and dev commands: ${devCommand.name}`);
                     return;
@@ -183,7 +189,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
                 const devCommand = this.contextMenuCommands.get(interaction.commandName);
 
-                if (!devCommand) return;
+                if (!devCommand || (!this.allowExecuteInNonDevGuild && !(interaction.guildId && this.devGuilds.includes(interaction.guildId)))) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting context menu command from client and dev commands: ${devCommand.name}`);
                     return;
@@ -194,7 +200,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         });
     }
 
-    public async getModuleDevCommands(script: RecipleDevCommandModuleScript): Promise<(AnyCommandBuilder)[]> {
+    public async getModuleDevCommands(script: RecipleDevCommandModuleScript): Promise<AnyCommandBuilder[]> {
         const commands: AnyCommandBuilder[] = [];
         if (!script?.devCommands) return commands;
 
