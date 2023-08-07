@@ -1,7 +1,7 @@
-import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
 import { AttachmentBuilder, BaseMessageOptions, codeBlock, EmbedBuilder, escapeCodeBlock, Message, TextBasedChannel } from 'discord.js';
+import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
 import { limitString } from 'fallout-utility';
-import { inspect } from 'util';
+import { inspect } from 'node:util';
 
 export class RecipleCrashHandler implements RecipleModuleScript {
     public versions: string = '^7';

@@ -1,13 +1,17 @@
-import { RecipleClient, RecipleModuleScript } from '@reciple/client';
-import { randomBytes } from 'crypto';
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenuApplicationCommandsJSONBody, isJSONEncodable } from 'discord.js';
-import { existsSync, readFileSync } from 'fs';
-import path from 'path';
-import { inspect } from 'util';
+import { RecipleClient, RecipleModuleScript } from '@reciple/client';
 import type { DevCommandManager } from 'reciple-dev-commands';
-import { mkdir, readFile, writeFile } from 'fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { existsSync, readFileSync } from 'node:fs';
+import { randomBytes } from 'node:crypto';
+import { inspect } from 'node:util';
+import path from 'node:path';
 
 export type RESTPostAPICommand = RESTPostAPIChatInputApplicationCommandsJSONBody|RESTPostAPIContextMenuApplicationCommandsJSONBody;
+
+export interface RegistryCacheManagerOptions {
+    cacheFolder?: string;
+}
 
 export class RegistryCacheManager implements RecipleModuleScript {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
@@ -30,6 +34,10 @@ export class RegistryCacheManager implements RecipleModuleScript {
 
     get isCommandsCached() {
         return this._isCommandsCached;
+    }
+
+    constructor(options?: RegistryCacheManagerOptions) {
+        this.cacheFolder = options?.cacheFolder ?? this.cacheFolder;
     }
 
     public async onStart(client: RecipleClient<false>): Promise<boolean> {
@@ -57,8 +65,14 @@ export class RegistryCacheManager implements RecipleModuleScript {
             if (this.devCommandsManager) devCommands = [...this.devCommandsManager.contextMenuCommands.values(), ...this.devCommandsManager.slashCommands.values()].map(c => c.toJSON());
         }
 
-        const commands = [...this.client.commands.contextMenuCommands.toJSON(), ...this.client.commands.slashCommands.toJSON(), ...this.client.commands.additionalApplicationCommands, ...devCommands].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
         if (this.client.config.applicationCommandRegister?.enabled === false) return;
+
+        const commands = [
+            ...this.client.commands.contextMenuCommands.values(),
+            ...this.client.commands.slashCommands.values(),
+            ...this.client.commands.additionalApplicationCommands,
+            ...devCommands
+        ].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
         const data = this.encodeCommandsData(commands);
 

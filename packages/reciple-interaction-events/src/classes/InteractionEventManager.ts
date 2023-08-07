@@ -1,10 +1,10 @@
-import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
-import { readFileSync } from 'fs';
-import path from 'path';
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
+import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
 import { isJSONEncodable } from 'discord.js';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 export class InteractionEventManager implements RecipleModuleScript {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));

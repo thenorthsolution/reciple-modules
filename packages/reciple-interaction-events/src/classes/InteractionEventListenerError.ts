@@ -1,4 +1,4 @@
-import { InteractionListenerType } from '..';
+import { InteractionListenerType } from '../types/listeners';
 
 export class InteractionEventListenerError extends Error {
     readonly listenerType?: keyof typeof InteractionListenerType;

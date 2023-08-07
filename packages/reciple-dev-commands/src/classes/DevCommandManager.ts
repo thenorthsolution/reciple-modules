@@ -1,10 +1,10 @@
 import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteData, MessageCommandExecuteFunction, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
-import { readFileSync } from 'fs';
-import path from 'path';
+import type { RegistryCacheManager } from 'reciple-registry-cache';
 import { ApplicationCommand, Collection } from 'discord.js';
 import { TypedEmitter, getCommand } from 'fallout-utility';
-import type { RegistryCacheManager } from 'reciple-registry-cache';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
 export interface DevCommandManagerOptions {
     prefix?: string;
@@ -123,7 +123,16 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             });
 
             if (!this.isCommandsCached) {
+                const configGuilds = new Set(
+                    ...(this.client.config.applicationCommandRegister?.registerToGuilds ?? []),
+                    ...(this.client.config.commands?.contextMenuCommand?.registerCommands?.registerToGuilds ?? []),
+                    ...(this.client.config.commands?.slashCommand?.registerCommands?.registerToGuilds ?? []),
+                    ...(this.client.config.commands?.additionalApplicationCommands?.registerCommands?.registerToGuilds ?? [])
+                );
+
                 for (const guildId of (this.devGuilds ?? [])) {
+                    if (configGuilds.has(guildId)) this.logger?.warn(`Replacing reciple application commands with dev commands on guild ${guildId}`);
+
                     const commands = await client.application.commands.set(applicationCommands, guildId);
 
                     this.emit('registerApplicationCommands', commands, guildId);
