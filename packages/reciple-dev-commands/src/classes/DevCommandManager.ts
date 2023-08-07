@@ -164,7 +164,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
             const devCommand = this.messageCommands.get(commandData.name);
 
-            if (!devCommand || this.isGuildAllowed(message)) return;
+            if (!devCommand || !this.isGuildAllowed(message)) return;
             if (clientCommand && devCommand) {
                 this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
                 return;
