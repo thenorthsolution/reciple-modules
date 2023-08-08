@@ -1,5 +1,5 @@
 import { DevCommandManager } from './classes/DevCommandManager';
 
 export * from './classes/DevCommandManager';
-
-export default new DevCommandManager();
+export const module = new DevCommandManager();
+export default module;

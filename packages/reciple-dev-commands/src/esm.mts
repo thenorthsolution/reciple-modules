@@ -1,4 +1,4 @@
-import module from './index.js';
+import { module } from './index.js';
 
 export * from './index.js';
 
