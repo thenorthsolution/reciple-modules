@@ -1,4 +1,4 @@
-import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteData, MessageCommandExecuteFunction, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
+import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
 import type { RegistryCacheManager } from 'reciple-registry-cache';
 import { ApplicationCommand, Collection } from 'discord.js';
@@ -205,24 +205,13 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         if (!script?.devCommands) return commands;
 
         for (const command of script.devCommands) {
-            if (command.commandType !== CommandType.MessageCommand) {
-                commands.push(
-                    command.commandType === CommandType.ContextMenuCommand
-                    ? ContextMenuCommandBuilder.resolve(command)
+            commands.push(
+                command.commandType === CommandType.ContextMenuCommand
+                ? ContextMenuCommandBuilder.resolve(command)
+                : command.commandType === CommandType.MessageCommand
+                    ? MessageCommandBuilder.resolve(command)
                     : SlashCommandBuilder.resolve(command)
-                );
-                continue;
-            }
-
-            const originalExecute = command.execute;
-            const execute: MessageCommandExecuteFunction = (data: MessageCommandExecuteData) => {
-                if (data.message.inGuild() && !(this.devGuilds ?? []).includes(data.message.guildId)) return;
-                if (this.devUsers && !this.devUsers.includes(data.message.author.id)) return;
-
-                return originalExecute ? originalExecute(data) : undefined;
-            };
-
-            commands.push(MessageCommandBuilder.resolve(command).setExecute(execute));
+            );
         }
 
         return commands;
