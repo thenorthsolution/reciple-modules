@@ -165,6 +165,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             const devCommand = this.messageCommands.get(commandData.name);
 
             if (!devCommand || !this.isGuildAllowed(message)) return;
+            if (this.devUsers.length && !this.devUsers.includes(message.author.id)) return;
             if (clientCommand && devCommand) {
                 this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
                 return;
@@ -179,6 +180,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const devCommand = this.slashCommands.get(interaction.commandName);
 
                 if (!devCommand || !this.isGuildAllowed(interaction)) return;
+                if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting slash command from client and dev commands: ${devCommand.name}`);
                     return;
@@ -190,6 +192,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const devCommand = this.contextMenuCommands.get(interaction.commandName);
 
                 if (!devCommand || !this.isGuildAllowed(interaction)) return;
+                if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
                 if (clientCommand && devCommand) {
                     this.logger?.warn(`Found conflicting context menu command from client and dev commands: ${devCommand.name}`);
                     return;
