@@ -158,6 +158,8 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         });
 
         client.on('messageCreate', async message => {
+            if (!this.devGuilds.length && !this.devUsers.length) return;
+
             const commandData = getCommand(message.content, this.prefix, this.argSeparator);
             if (!commandData || !commandData.name) return;
 
@@ -175,6 +177,8 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         });
 
         client.on('interactionCreate', async interaction => {
+            if (!this.devGuilds.length && !this.devUsers.length) return;
+
             if (interaction.isChatInputCommand()) {
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.SlashCommand);
                 const devCommand = this.slashCommands.get(interaction.commandName);
