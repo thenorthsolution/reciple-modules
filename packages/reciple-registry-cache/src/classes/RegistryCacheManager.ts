@@ -115,7 +115,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
     }
 
     public async updateLastCache(data: string): Promise<void> {
-        mkdir(path.dirname(this.registryCacheFile), { recursive: true });
+        mkdir(this.cacheFolder, { recursive: true });
         writeFile(this.registryCacheFile, data, 'utf-8');
     }
 
