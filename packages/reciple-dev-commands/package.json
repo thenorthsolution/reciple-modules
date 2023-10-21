@@ -40,6 +40,6 @@
         "fallout-utility": "^2.5.1"
     },
     "devDependencies": {
-        "reciple-registry-cache": "^1.0.0"
+        "reciple-registry-cache": "^2.0.0-dev.0"
     }
 }
