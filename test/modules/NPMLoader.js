@@ -9,11 +9,11 @@ const __dirname = path.dirname(__filename);
 export class NPMLoader extends RecipleNPMLoader {
     get cwd() { return cli.cwd; }
 
-    async onStart({ client }) {
+    async onStart(data) {
         this.nodeModulesFolder = path.join(__dirname, '../../node_modules');
-        this.disableVersionChecks = client.config.modules.disableModuleVersionCheck;
+        this.disableVersionChecks = data.client.config.modules.disableModuleVersionCheck;
 
-        return super.onStart(client);
+        return super.onStart(data);
     }
 }
 
