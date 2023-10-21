@@ -1,15 +1,17 @@
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
+import { Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
-import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
 import { isJSONEncodable } from 'discord.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
-export class InteractionEventManager implements RecipleModuleScript {
+export class InteractionEventManager implements RecipleModuleData {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
-    readonly moduleName: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/client'];
+
+    readonly id: string = 'com.reciple.interaction-events';
+    readonly name: string = this.packageJson.name;
+    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
 
     public client!: RecipleClient;
     public logger?: Logger;
@@ -18,7 +20,7 @@ export class InteractionEventManager implements RecipleModuleScript {
         this.emitInteraction = this.emitInteraction.bind(this);
     }
 
-    public async onStart(client: RecipleClient<false>): Promise<boolean> {
+    public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'InteractionEventManager' });
 
@@ -34,7 +36,7 @@ export class InteractionEventManager implements RecipleModuleScript {
     }
 
     public async emitInteraction(interaction: Parameters<AnyInteractionListener['execute']>[0]): Promise<void> {
-        let scripts: RecipleInteractionListenerModule[] = this.client.modules.modules.map(s => s.script as RecipleInteractionListenerModule);
+        let scripts: RecipleInteractionListenerModule[] = this.client.modules.cache.map(s => s.data as RecipleInteractionListenerModule);
 
         const commandType = this.getInteractionListenerType(interaction);
 

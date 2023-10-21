@@ -1,5 +1,5 @@
-import { RecipleCrashHandler } from './classes/RecipleCrashHandler';
+import { RecipleAnticrash } from './classes/RecipleAnticrash';
 
-export * from './classes/RecipleCrashHandler';
-export const module = new RecipleCrashHandler();
+export * from './classes/RecipleAnticrash';
+export const module = new RecipleAnticrash();
 export default module;

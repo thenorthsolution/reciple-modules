@@ -1,5 +1,5 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenuApplicationCommandsJSONBody, isJSONEncodable } from 'discord.js';
-import { RecipleClient, RecipleModuleScript } from '@reciple/client';
+import { RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import type { DevCommandManager } from 'reciple-dev-commands';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
@@ -13,10 +13,12 @@ export interface RegistryCacheManagerOptions {
     cacheFolder?: string;
 }
 
-export class RegistryCacheManager implements RecipleModuleScript {
+export class RegistryCacheManager implements RecipleModuleData {
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
-    readonly moduleName: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/client'];
+
+    readonly id: string = 'com.reciple.registry-cache';
+    readonly name: string = this.packageJson.name;
+    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
 
     private _isCommandsCached: boolean = false;
     private _DevCommandManager: typeof DevCommandManager|null = null;
@@ -24,7 +26,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
 
     public devCommandsManager?: DevCommandManager;
     public cacheFolder: string = path.join(__dirname, '../../.cache/');
-    public client!: RecipleClient;
+    public client!: RecipleClient<true>;
 
     public lastRegistryCheck: Date|null = null;
 
@@ -40,7 +42,7 @@ export class RegistryCacheManager implements RecipleModuleScript {
         this.cacheFolder = options?.cacheFolder ?? this.cacheFolder;
     }
 
-    public async onStart(client: RecipleClient<false>): Promise<boolean> {
+    public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
 
         return true;
@@ -59,8 +61,8 @@ export class RegistryCacheManager implements RecipleModuleScript {
         if (this._DevCommandManager) {
             const DevCommandManager = this._DevCommandManager;
 
-            const devCommandsModule = this.client.modules.cache.find(m => m.script instanceof DevCommandManager && m.script.moduleName === 'reciple-dev-commands');
-            this.devCommandsManager = devCommandsModule?.script as DevCommandManager|undefined;
+            const devCommandsModule = this.client.modules.cache.find(m => m.data instanceof DevCommandManager && m.data.id === 'com.reciple.dev-commands');
+            this.devCommandsManager = devCommandsModule?.data as DevCommandManager|undefined;
 
             if (this.devCommandsManager) devCommands = [...this.devCommandsManager.contextMenuCommands.values(), ...this.devCommandsManager.slashCommands.values()].map(c => c.toJSON());
         }
@@ -70,7 +72,6 @@ export class RegistryCacheManager implements RecipleModuleScript {
         const commands = [
             ...this.client.commands.contextMenuCommands.values(),
             ...this.client.commands.slashCommands.values(),
-            ...this.client.commands.additionalApplicationCommands,
             ...devCommands
         ].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
@@ -93,7 +94,6 @@ export class RegistryCacheManager implements RecipleModuleScript {
 
     public encodeCommandsData(commands: RESTPostAPICommand[]): string {
         const data = {
-            additionalApplicationCommands: this.client.config.commands?.additionalApplicationCommands,
             contextMenuCommands: this.client.config.commands?.contextMenuCommand,
             slashCommands: this.client.config.commands?.slashCommand,
             applicationCommandRegister: this.client.config.applicationCommandRegister,

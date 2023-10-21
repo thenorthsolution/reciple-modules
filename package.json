@@ -2,22 +2,20 @@
   "name": "reciple-modules",
   "private": true,
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "test"
   ],
   "scripts": {
     "build": "npx lerna run build",
     "test": "npx reciple ./test"
   },
   "devDependencies": {
-    "@reciple/client": "^7.7.2",
+    "@reciple/core": "^8.0.0-dev.6",
     "@types/node": "^20.4.8",
     "discord.js": "^14.12.1",
     "lerna": "^7.1.4",
-    "reciple": "^7.9.6",
+    "reciple": "^8.0.0-dev.8",
     "rimraf": "^5.0.1",
     "typescript": "^5.1.6"
-  },
-  "dependencies": {
-    "@reciple/npm-loader": "^7.4.4"
   }
 }
