@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "build": "npx lerna run build",
-    "test": "npx reciple ./test"
+    "test": "npm run dev -w test"
   },
   "devDependencies": {
     "@reciple/core": "^8.0.0-dev.6",
