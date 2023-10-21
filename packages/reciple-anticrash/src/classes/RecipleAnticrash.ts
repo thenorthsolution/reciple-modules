@@ -11,7 +11,7 @@ export class RecipleAnticrash implements RecipleModuleData {
     readonly id: string = 'com.reciple.anticrash';
     readonly name: string = this.packageJson.name;
 
-    public versions: string = '^8';
+    public versions: string = this.packageJson.peerDependencies['@reciple/core'];
     public client!: RecipleClient;
     public logger?: Logger;
 
