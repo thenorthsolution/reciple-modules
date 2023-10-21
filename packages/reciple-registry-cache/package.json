@@ -6,12 +6,16 @@
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
     "types": "./dist/index.d.ts",
-    "recipleModule": "./dist/esm.mjs",
+    "recipleModule": "./dist/module.mjs",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/esm.mjs",
             "require": "./dist/index.js"
+        },
+        "./module": {
+            "import": "./dist/module.mjs",
+            "types": "./dist/module.d.mts"
         }
     },
     "files": [
