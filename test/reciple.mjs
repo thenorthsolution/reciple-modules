@@ -4,12 +4,12 @@ import { IntentsBitField } from 'discord.js';
 // @ts-check
 
 /**
- * @type {import('reciple').RecipleConfig}
+ * @satisfies {import('reciple').RecipleConfig}
  */
 export const config = {
     token: process.env.TOKEN ?? '',
     commands: {
-        contextMenuCommands: {
+        contextMenuCommand: {
             enabled: true,
             enableCooldown: true,
             acceptRepliedInteractions: false,
