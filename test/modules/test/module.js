@@ -3,10 +3,10 @@
 import { ContextMenuCommandBuilder, MessageCommandBuilder, SlashCommandBuilder } from "reciple";
 
 /**
- * @satisfies {import("reciple").RecipleModuleScript}
+ * @satisfies {import("reciple").RecipleModuleData}
  */
 export default {
-    versions: '^7',
+    versions: '^8',
     devCommands: [
         new SlashCommandBuilder()
             .setName('test')

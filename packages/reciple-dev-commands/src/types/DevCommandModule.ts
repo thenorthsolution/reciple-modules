@@ -1,5 +1,5 @@
-import { AnyCommandBuilder, AnyCommandData, RecipleModuleScript } from '@reciple/client';
+import { AnyCommandResolvable, RecipleModuleData } from '@reciple/core';
 
-export interface RecipleDevCommandModuleScript extends RecipleModuleScript {
-    devCommands?: (AnyCommandBuilder|AnyCommandData)[];
+export interface RecipleDevCommandModuleScript extends RecipleModuleData {
+    devCommands?: AnyCommandResolvable[];
 }

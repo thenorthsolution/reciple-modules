@@ -1,17 +1,21 @@
 {
     "name": "reciple-dev-commands",
     "description": "Add Reciple dev only commands",
-    "version": "1.3.10",
+    "version": "2.0.0-dev.0",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
     "types": "./dist/index.d.ts",
-    "recipleModule": "./dist/esm.mjs",
+    "recipleModule": "./dist/module.mjs",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/esm.mjs",
             "require": "./dist/index.js"
+        },
+        "./module": {
+            "import": "./dist/module.mjs",
+            "types": "./dist/module.d.mts"
         }
     },
     "files": [
@@ -26,20 +30,20 @@
         "build": "npm run clean && npx tsc --noEmitOnError true"
     },
     "peerDependencies": {
-        "@reciple/client": "^7.7.1"
-    },
-    "optionalDependencies": {
-        "reciple-registry-cache": "^1.0.10"
+        "@reciple/core": "^8.0.0"
     },
     "peerDependenciesMeta": {
-        "@reciple/client": {
+        "@reciple/core": {
             "optional": true
         }
+    },
+    "optionalDependencies": {
+        "reciple-registry-cache": "^2.0.0-dev.0"
     },
     "dependencies": {
         "fallout-utility": "^2.5.1"
     },
     "devDependencies": {
-        "reciple-registry-cache": "^1.0.0"
+        "reciple-registry-cache": "^2.0.0-dev.0"
     }
 }

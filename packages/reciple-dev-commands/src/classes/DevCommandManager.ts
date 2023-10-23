@@ -1,14 +1,14 @@
-import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, RecipleClient, RecipleModuleScript, SlashCommandBuilder } from '@reciple/client';
+import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteOptions, RecipleClient, RecipleModuleData, RecipleModuleLoadData, RecipleModuleStartData, SlashCommandBuilder, Utils } from '@reciple/core';
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
 import type { RegistryCacheManager } from 'reciple-registry-cache';
-import { ApplicationCommand, Collection } from 'discord.js';
+import { ApplicationCommand, Awaitable, Collection } from 'discord.js';
 import { TypedEmitter, getCommand } from 'fallout-utility';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 export interface DevCommandManagerOptions {
-    prefix?: string;
-    argSeparator?: string;
+    prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
+    argSeparator?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
     devGuilds?: string[];
     devUsers?: string[];
     /**
@@ -27,13 +27,14 @@ export interface DevCommandManagerEvents {
     commandExecute: [command: AnyCommandExecuteData];
 }
 
-export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleScript {
-    private _prefix?: string;
-    private _argSeparator?: string;
+export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleData {
+    private _prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
+    private _argSeparator?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
 
-    readonly moduleName: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/client'];
+    readonly id: string = 'com.reciple.dev-commands';
+    readonly name: string = this.packageJson.name;
+    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
     readonly contextMenuCommands: Collection<string, ContextMenuCommandBuilder> = new Collection();
     readonly messageCommands: Collection<string, MessageCommandBuilder> = new Collection();
     readonly slashCommands: Collection<string, AnySlashCommandBuilder> = new Collection();
@@ -57,29 +58,20 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         return this.registryCacheManager.isCommandsCached;
     }
 
-    get prefix(): string {
-        return this._prefix ?? this.client.config.commands?.messageCommand?.prefix ?? '!';
-    }
-
-    get argSeparator(): string {
-        return this._argSeparator ?? this.client.config.commands?.messageCommand?.commandArgumentSeparator ?? ' ';
-    }
-
-    set prefix(value: string|undefined|null) { this._prefix = value || undefined; }
     set argSeparator(value: string|undefined|null) { this._argSeparator = value || undefined; }
 
     constructor(options?: DevCommandManagerOptions) {
         super();
 
-        this.prefix = options?.prefix;
-        this.argSeparator = options?.argSeparator;
+        this._prefix = options?.prefix;
+        this._argSeparator = options?.argSeparator;
         this.devGuilds = options?.devGuilds ?? [];
         this.devUsers = options?.devUsers ?? [];
         this.allowExecuteInNonDevGuild = options?.allowExecuteInNonDevGuild ?? true;
         this.ignoreCommandsCacheRegister = options?.ignoreCommandsCacheRegister ?? false;
     }
 
-    public async onStart(client: RecipleClient<false>): Promise<boolean> {
+    public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'DevCommandManager' });
 
@@ -88,19 +80,19 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         return true;
     }
 
-    public async onLoad(client: RecipleClient<true>): Promise<void> {
+    public async onLoad({ client }: RecipleModuleLoadData): Promise<void> {
         const RegistryCacheManager = await import('reciple-registry-cache').then(data => data.RegistryCacheManager).catch(() => null);
 
         if (RegistryCacheManager) {
-            const registryCacheManagerModule = client.modules.cache.find(m => m.script instanceof RegistryCacheManager && m.script.moduleName === 'reciple-registry-cache');
-            this.registryCacheManager = registryCacheManagerModule?.script as RegistryCacheManager ?? null;
+            const registryCacheManagerModule = client.modules.cache.find(m => m.data instanceof RegistryCacheManager && m.id === 'com.reciple.registry-cache');
+            this.registryCacheManager = registryCacheManagerModule?.data as RegistryCacheManager ?? null;
         }
 
         for (const [id, mdule] of client.modules.cache) {
-            const devCommands = await this.getModuleDevCommands(mdule.script);
+            const devCommands = await this.getModuleDevCommands(mdule.data);
 
             for (const command of devCommands) {
-                switch (command.commandType) {
+                switch (command.command_type) {
                     case CommandType.ContextMenuCommand:
                         this.contextMenuCommands.set(command.name, command);
                         break;
@@ -118,11 +110,9 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
 
         client.modules.once('loadedModules', async () => {
             await new Promise((res, rej) => {
-                let timer: NodeJS.Timer|null = null;
-
-                setInterval(() => {
+                let timer: NodeJS.Timeout = setTimeout(() => {
                     if (this.registryCacheManager && this.registryCacheManager.lastRegistryCheck === null) return;
-                    if (timer) clearInterval(timer);
+                    if (timer) clearTimeout(timer);
 
                     res(this.isCommandsCached);
                 }, 100);
@@ -132,11 +122,10 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 const configGuilds = new Set(
                     ...(this.client.config.applicationCommandRegister?.registerToGuilds ?? []),
                     ...(this.client.config.commands?.contextMenuCommand?.registerCommands?.registerToGuilds ?? []),
-                    ...(this.client.config.commands?.slashCommand?.registerCommands?.registerToGuilds ?? []),
-                    ...(this.client.config.commands?.additionalApplicationCommands?.registerCommands?.registerToGuilds ?? [])
+                    ...(this.client.config.commands?.slashCommand?.registerCommands?.registerToGuilds ?? [])
                 );
 
-                for (const guildId of (this.devGuilds)) {
+                for (const guildId of this.devGuilds) {
                     if (configGuilds.has(guildId)) this.logger?.warn(`Replacing reciple application commands with dev commands on guild ${guildId}`);
 
                     const commands = await client.application.commands.set(applicationCommands, guildId);
@@ -151,16 +140,14 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             this.logger?.log(`Loaded (${this.contextMenuCommands.size}) context menu command(s)`);
             this.logger?.log(`Loaded (${this.messageCommands.size}) message command(s)`);
             this.logger?.log(`Loaded (${this.slashCommands.size}) slash command(s)`);
-
-            if (client.config.commands?.messageCommand?.prefix && this.prefix !== client.config.commands?.messageCommand?.prefix) {
-                this.logger?.warn(`Message commands prefix is [${this.prefix}]`);
-            }
         });
 
         client.on('messageCreate', async message => {
             if (!this.devGuilds.length && !this.devUsers.length) return;
 
-            const commandData = getCommand(message.content, this.prefix, this.argSeparator);
+            const prefix = await this.getCommandPrefix({ client: this.client, message });
+            const argSeparator = await this.getCommandArgSeparator({ client: this.client, message });
+            const commandData = getCommand(message.content, prefix, argSeparator);
             if (!commandData || !commandData.name) return;
 
             const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
@@ -173,7 +160,11 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 return;
             }
 
-            this.emit('commandExecute', await MessageCommandBuilder.execute(client, message, this.prefix, this.argSeparator, devCommand));
+            this.emit('commandExecute', await MessageCommandBuilder.execute({
+                client: this.client,
+                message,
+                command: devCommand
+            }));
         });
 
         client.on('interactionCreate', async interaction => {
@@ -190,7 +181,11 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                     return;
                 }
 
-                this.emit('commandExecute', await SlashCommandBuilder.execute(this.client, interaction, devCommand));
+                this.emit('commandExecute', await SlashCommandBuilder.execute({
+                    client: this.client,
+                    interaction,
+                    command: devCommand
+                }));
             } else if (interaction.isContextMenuCommand()) {
                 const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
                 const devCommand = this.contextMenuCommands.get(interaction.commandName);
@@ -202,7 +197,11 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                     return;
                 }
 
-                this.emit('commandExecute', await ContextMenuCommandBuilder.execute(this.client, interaction, devCommand));
+                this.emit('commandExecute', await ContextMenuCommandBuilder.execute({
+                    client: this.client,
+                    interaction,
+                    command: devCommand
+                }));
             }
         });
     }
@@ -212,16 +211,37 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         if (!script?.devCommands) return commands;
 
         for (const command of script.devCommands) {
+            const data = Utils.resolveCommandBuilder(command);
             commands.push(
-                command.commandType === CommandType.ContextMenuCommand
-                ? ContextMenuCommandBuilder.resolve(command)
-                : command.commandType === CommandType.MessageCommand
-                    ? MessageCommandBuilder.resolve(command)
-                    : SlashCommandBuilder.resolve(command)
+                data.command_type === CommandType.ContextMenuCommand
+                    ? ContextMenuCommandBuilder.resolve(data)
+                    : data.command_type === CommandType.MessageCommand
+                        ? MessageCommandBuilder.resolve(data)
+                        : SlashCommandBuilder.resolve(data)
             );
         }
 
         return commands;
+    }
+
+    public async getCommandPrefix(data: MessageCommandExecuteOptions): Promise<string> {
+        const prefix = this._prefix ?? this.client.config.commands?.messageCommand?.prefix ?? '!';
+        return typeof prefix === 'string' ? prefix : prefix(data);
+    }
+
+    public setCommandPrefix(prefix: DevCommandManagerOptions['prefix']|null): this {
+        this._prefix = prefix ?? undefined;
+        return this;
+    }
+
+    public async getCommandArgSeparator(data: MessageCommandExecuteOptions): Promise<string> {
+        const argSeparator = this._argSeparator ?? this.client.config.commands?.messageCommand?.commandArgumentSeparator ?? ' ';
+        return typeof argSeparator === 'string' ? argSeparator : argSeparator(data);
+    }
+
+    public setCommandArgSeparator(argSeparator: DevCommandManagerOptions['argSeparator']|null): this {
+        this._argSeparator = argSeparator ?? undefined;
+        return this;
     }
 
     public isGuildAllowed(command: { guildId: string|null; }): boolean {

@@ -1,10 +1,17 @@
 import { AttachmentBuilder, BaseMessageOptions, codeBlock, EmbedBuilder, escapeCodeBlock, Message, TextBasedChannel } from 'discord.js';
-import { Logger, RecipleClient, RecipleModuleScript } from '@reciple/client';
+import { Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { inspect, stripVTControlCharacters } from 'node:util';
 import { limitString } from 'fallout-utility';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
 
-export class RecipleCrashHandler implements RecipleModuleScript {
-    public versions: string = '^7';
+export class RecipleAnticrash implements RecipleModuleData {
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+
+    readonly id: string = 'com.reciple.anticrash';
+    readonly name: string = this.packageJson.name;
+
+    public versions: string = this.packageJson.peerDependencies['@reciple/core'];
     public client!: RecipleClient;
     public logger?: Logger;
 
@@ -17,7 +24,7 @@ export class RecipleCrashHandler implements RecipleModuleScript {
         this._eventListener = this._eventListener.bind(this);
     }
 
-    public async onStart(client: RecipleClient<false>): Promise<boolean> {
+    public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'AntiCrash' });
 
