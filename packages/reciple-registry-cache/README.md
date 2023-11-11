@@ -1,30 +1,26 @@
 # Reciple Registry Cache
 
-Cache application commands to prevent register api spam
+Cache registered application commands locally and only register commands when the command list changes.
 
 ## Usage
-
-- You can install [`@reciple/npm-loader`](https://www.npmjs.com/package/@reciple/npm-loader) to automatically load module from node_modules.
-- Make a module file and export the module
-
-## Installation
-
-### NPM Loader Method
-
-```bash
-npm i @reciple/npm-loader reciple-registry-cache
-```
-
-### Export Method
 
 ```bash
 npm i reciple-registry-cache
 ```
 
-Create a new module and export a new class instance of `RegistryCacheManager`.
+Create a new module and export an instance of `RegistryCacheManager`.
 
 ```js
+// New module instance
 import { RegistryCacheManager } from 'reciple-registry-cache';
 
-export default new RegistryCacheManager();
+export default new RegistryCacheManager({
+    cacheFolder: './node_modules/.cache/reciple-registry-cache/' // (Optional) custom cache folder
+});
+```
+```js
+// Default module instance
+import registryCacheManager from 'reciple-registry-cache/module';
+
+export default registryCacheManager;
 ```
