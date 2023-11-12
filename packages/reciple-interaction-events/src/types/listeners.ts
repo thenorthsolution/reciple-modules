@@ -1,4 +1,5 @@
-import { AnySelectMenuInteraction, AutocompleteInteraction, Awaitable, BaseInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandInteraction, ModalSubmitInteraction } from 'discord.js';
+import { CommandHaltReason } from '@reciple/core';
+import { AnySelectMenuInteraction, AutocompleteInteraction, Awaitable, BaseInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandInteraction, ModalSubmitInteraction, PermissionResolvable, PermissionsBitField } from 'discord.js';
 
 export enum InteractionListenerType {
     Autocomplete,
@@ -11,9 +12,25 @@ export enum InteractionListenerType {
 
 export interface InteractionListener<T extends BaseInteraction> {
     type: InteractionListenerType;
+    cooldown?: { ms: number; id: string; };
     execute: (interaction: T) => Awaitable<void>;
+    halt?: (data: InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>) => Awaitable<boolean|void>;
+    requiredMemberPermissions?: PermissionResolvable;
+    requiredBotPermissions?: PermissionResolvable;
     commandName?: string|((interaction: T) => Awaitable<boolean>);
     customId?: string|((customId: T) => Awaitable<boolean>);
+}
+
+export interface InteractionListenerErrorHaltData<T extends BaseInteraction> {
+    interaction: T;
+    reason: CommandHaltReason.Error;
+    error: unknown;
+}
+
+export interface InteractionListenerMissingPermissionsHaltData<T extends BaseInteraction> {
+    interaction: T;
+    reason: CommandHaltReason.MissingMemberPermissions|CommandHaltReason.MissingBotPermissions;
+    missingPermissions: PermissionsBitField;
 }
 
 export interface CommandInteractionListener<T extends BaseInteraction> extends Omit<InteractionListener<T>, 'customId'> {

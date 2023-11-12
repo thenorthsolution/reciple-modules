@@ -1,8 +1,8 @@
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
-import { Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
+import { CommandHaltReason, CommandPermissionsPrecondition, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
-import { isJSONEncodable } from 'discord.js';
+import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable } from 'discord.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -56,12 +56,46 @@ export class InteractionEventManager implements RecipleModuleData {
                         if (!await this.satisfiesCustomId(interaction as AnyComponentInteraction, listener)) continue;
                     }
 
+                    const channel = interaction.channelId ? await interaction.guild?.channels.fetch(interaction.channelId) as GuildTextBasedChannel : null;
+                    const requiredMemberPermissions = listener.requiredMemberPermissions ? PermissionsBitField.resolve(listener.requiredMemberPermissions) : null;
+                    const requiredBotPermissions = listener.requiredBotPermissions ? PermissionsBitField.resolve(listener.requiredBotPermissions) : null;
+
+                    if (channel && interaction.inCachedGuild()) {
+                        if (requiredMemberPermissions && !channel.permissionsFor(interaction.member).has(requiredMemberPermissions)) {
+                            if (listener.halt) await listener.halt({
+                                reason: CommandHaltReason.MissingMemberPermissions,
+                                missingPermissions: new PermissionsBitField(channel.permissionsFor(interaction.member).missing(requiredMemberPermissions)),
+                                // @ts-expect-error Never type
+                                interaction
+                            });
+                            continue;
+                        }
+
+                        if (requiredBotPermissions && !await CommandPermissionsPrecondition.userHasPermissionsIn(channel ?? interaction.guild, requiredBotPermissions)) {
+                            if (listener.halt) await listener.halt({
+                                reason: CommandHaltReason.MissingBotPermissions,
+                                missingPermissions: await CommandPermissionsPrecondition.getMissingPermissionsIn(channel ?? interaction.guild, requiredBotPermissions),
+                                // @ts-expect-error Never type
+                                interaction
+                            });
+                            continue;
+                        }
+                    }
+
                     // @ts-expect-error Never type
                     await Promise.resolve(listener.execute(interaction));
-                } catch(err) {
+                } catch(error) {
+                    const handled = listener.halt ? await listener.halt({
+                        reason: CommandHaltReason.Error,
+                        error,
+                        // @ts-expect-error Never type
+                        interaction
+                    }) : null;
+
+                    if (handled) continue;
                     this.client._throwError(new InteractionEventListenerError({
                         message: 'An error occured while executing an interaction event listener.',
-                        cause: err,
+                        cause: error,
                         listenerType: InteractionListenerType[listener.type] as keyof typeof InteractionListenerType
                     }))
                 }
