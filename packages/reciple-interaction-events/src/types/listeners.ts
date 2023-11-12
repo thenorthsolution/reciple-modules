@@ -1,4 +1,4 @@
-import { CommandHaltReason } from '@reciple/core';
+import { CommandHaltReason, Cooldown } from '@reciple/core';
 import { AnySelectMenuInteraction, AutocompleteInteraction, Awaitable, BaseInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandInteraction, ModalSubmitInteraction, PermissionResolvable, PermissionsBitField } from 'discord.js';
 
 export enum InteractionListenerType {
@@ -14,7 +14,7 @@ export interface InteractionListener<T extends BaseInteraction> {
     type: InteractionListenerType;
     cooldown?: { ms: number; id: string; };
     execute: (interaction: T) => Awaitable<void>;
-    halt?: (data: InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>) => Awaitable<boolean|void>;
+    halt?: (data: InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>|InteractionListenerCooldownHaltData<T>) => Awaitable<boolean|void>;
     requiredMemberPermissions?: PermissionResolvable;
     requiredBotPermissions?: PermissionResolvable;
     commandName?: string|((interaction: T) => Awaitable<boolean>);
@@ -25,6 +25,12 @@ export interface InteractionListenerErrorHaltData<T extends BaseInteraction> {
     interaction: T;
     reason: CommandHaltReason.Error;
     error: unknown;
+}
+
+export interface InteractionListenerCooldownHaltData<T extends BaseInteraction> {
+    interaction: T;
+    reason: CommandHaltReason.Cooldown;
+    cooldown: Cooldown;
 }
 
 export interface InteractionListenerMissingPermissionsHaltData<T extends BaseInteraction> {

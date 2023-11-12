@@ -1,5 +1,5 @@
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
-import { CommandHaltReason, CommandPermissionsPrecondition, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
+import { CommandHaltReason, CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable } from 'discord.js';
@@ -80,6 +80,30 @@ export class InteractionEventManager implements RecipleModuleData {
                             });
                             continue;
                         }
+                    }
+
+                    if (listener.cooldown) {
+                        const cooldownData: Omit<CooldownData, 'endsAt'> = {
+                            commandName: listener.cooldown.id,
+                            guildId: interaction.guildId ?? undefined,
+                            userId: interaction.user.id
+                        };
+                        const isCooledDown = this.client.cooldowns?.findCooldown(cooldownData);
+
+                        if (isCooledDown) {
+                            if (listener.halt) await listener.halt({
+                                reason: CommandHaltReason.Cooldown,
+                                cooldown: isCooledDown,
+                                // @ts-expect-error Never type
+                                interaction
+                            });
+                            continue;
+                        }
+
+                        this.client.cooldowns?.create({
+                            ...cooldownData,
+                            endsAt: new Date(Date.now() + listener.cooldown.ms)
+                        });
                     }
 
                     // @ts-expect-error Never type
