@@ -84,7 +84,7 @@ export class InteractionEventManager implements RecipleModuleData {
 
                     if (listener.cooldown) {
                         const cooldownData: Omit<CooldownData, 'endsAt'> = {
-                            commandName: listener.cooldown.id,
+                            commandName: `interaction-event ${'customId' in interaction ? interaction.customId : interaction.commandName}`,
                             guildId: interaction.guildId ?? undefined,
                             userId: interaction.user.id
                         };
@@ -102,7 +102,7 @@ export class InteractionEventManager implements RecipleModuleData {
 
                         this.client.cooldowns?.create({
                             ...cooldownData,
-                            endsAt: new Date(Date.now() + listener.cooldown.ms)
+                            endsAt: new Date(Date.now() + listener.cooldown)
                         });
                     }
 

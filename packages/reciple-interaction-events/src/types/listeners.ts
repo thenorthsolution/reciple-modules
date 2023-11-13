@@ -12,7 +12,7 @@ export enum InteractionListenerType {
 
 export interface InteractionListener<T extends BaseInteraction> {
     type: InteractionListenerType;
-    cooldown?: { ms: number; id: string; };
+    cooldown?: number;
     execute: (interaction: T) => Awaitable<void>;
     halt?: (data: InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>|InteractionListenerCooldownHaltData<T>) => Awaitable<boolean|void>;
     requiredMemberPermissions?: PermissionResolvable;
