@@ -43,7 +43,7 @@ export class RegistryCacheManager implements RecipleModuleData {
     }
 
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
-        this.client = client;
+        this.client = client as RecipleClient<true>;
 
         return true;
     }

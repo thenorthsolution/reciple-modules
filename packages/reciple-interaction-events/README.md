@@ -27,9 +27,9 @@ export default interactionEventManager;
 Add your interaction event listeners to your module's `interactionListeners` property.
 
 ```js
-import { CommandHaltReason, MessageCommandBuilder } from '@reciple/core';
-import { ButtonBuilder, ButtonStyle, ComponentType, time } from 'discord.js';
+import { ButtonBuilder, ButtonStyle, ComponentType, InteractionListenerHaltReason, time } from 'discord.js';
 import { InteractionListenerType } from 'reciple-interaction-events';
+import { MessageCommandBuilder } from '@reciple/core';
 
 export default {
     versions: '^8',
@@ -71,22 +71,22 @@ export default {
             // (Optional) Function to handle errors, cooldowns, and permission abort
             halt: async ({ interaction, reason, error, cooldown, missingPermissions }) => {
                 switch(reason) {
-                    case CommandHaltReason.Error:
+                    case InteractionListenerHaltReason.Error:
                         console.log(error);
                         return true;
-                    case CommandHaltReason.Cooldown:
+                    case InteractionListenerHaltReason.Cooldown:
                         await interaction.reply({
                             content: `You are cooled-down for ${time(cooldown.endsAt, 'R')}`,
                             ephemeral: true
                         });
                         return true;
-                    case CommandHaltReason.MissingBotPermissions:
+                    case InteractionListenerHaltReason.MissingBotPermissions:
                         await interaction.reply({
                             content: `Bot is missing ${missingPermissions.toJSON().map(p => '`' + p + '`').join(' ')} permissions to execute this command`,
                             ephemeral: true
                         });
                         return true;
-                    case CommandHaltReason.MissingMemberPermissions:
+                    case InteractionListenerHaltReason.MissingMemberPermissions:
                         await interaction.reply({
                             content: `You don't have ${missingPermissions.toJSON().map(p => '`' + p + '`').join(' ')} permissions to execute this command`,
                             ephemeral: true
