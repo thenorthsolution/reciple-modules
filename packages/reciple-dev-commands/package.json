@@ -1,7 +1,7 @@
 {
     "name": "reciple-dev-commands",
     "description": "Add Reciple dev only commands",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
@@ -38,7 +38,7 @@
         }
     },
     "optionalDependencies": {
-        "reciple-registry-cache": "^2.0.0"
+        "reciple-registry-cache": "^2.1.0"
     },
     "dependencies": {
         "fallout-utility": "^2.5.1"
