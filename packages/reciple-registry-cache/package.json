@@ -30,7 +30,7 @@
         "build": "npm run clean && npx tsc --noEmitOnError true"
     },
     "peerDependencies": {
-        "@reciple/core": "^8.0.0"
+        "@reciple/core": "^8.2.0"
     },
     "optionalDependencies": {
         "reciple-dev-commands": "^2.0.0"
