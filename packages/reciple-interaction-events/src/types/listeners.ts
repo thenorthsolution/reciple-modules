@@ -1,4 +1,4 @@
-import { CommandHaltReason, Cooldown } from '@reciple/core';
+import { Cooldown } from '@reciple/core';
 import { AnySelectMenuInteraction, AutocompleteInteraction, Awaitable, BaseInteraction, ButtonInteraction, ChatInputCommandInteraction, ContextMenuCommandInteraction, ModalSubmitInteraction, PermissionResolvable, PermissionsBitField } from 'discord.js';
 
 export enum InteractionListenerType {
@@ -8,6 +8,13 @@ export enum InteractionListenerType {
     Button,
     ModalSubmit,
     SelectMenu
+}
+
+export enum InteractionListenerHaltReason {
+    Error = 1,
+    Cooldown,
+    MissingMemberPermissions = 6,
+    MissingBotPermissions = 7,
 }
 
 export interface InteractionListener<T extends BaseInteraction> {
@@ -23,19 +30,19 @@ export interface InteractionListener<T extends BaseInteraction> {
 
 export interface InteractionListenerErrorHaltData<T extends BaseInteraction> {
     interaction: T;
-    reason: CommandHaltReason.Error;
+    reason: InteractionListenerHaltReason.Error;
     error: unknown;
 }
 
 export interface InteractionListenerCooldownHaltData<T extends BaseInteraction> {
     interaction: T;
-    reason: CommandHaltReason.Cooldown;
+    reason: InteractionListenerHaltReason.Cooldown;
     cooldown: Cooldown;
 }
 
 export interface InteractionListenerMissingPermissionsHaltData<T extends BaseInteraction> {
     interaction: T;
-    reason: CommandHaltReason.MissingMemberPermissions|CommandHaltReason.MissingBotPermissions;
+    reason: InteractionListenerHaltReason.MissingMemberPermissions|InteractionListenerHaltReason.MissingBotPermissions;
     missingPermissions: PermissionsBitField;
 }
 

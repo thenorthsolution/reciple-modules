@@ -1,5 +1,5 @@
-import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerType } from '../types/listeners';
-import { CommandHaltReason, CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
+import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerHaltReason, InteractionListenerType } from '../types/listeners';
+import { CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
 import { InteractionEventListenerError } from './InteractionEventListenerError';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable } from 'discord.js';
@@ -63,7 +63,7 @@ export class InteractionEventManager implements RecipleModuleData {
                     if (channel && interaction.inCachedGuild()) {
                         if (requiredMemberPermissions && !channel.permissionsFor(interaction.member).has(requiredMemberPermissions)) {
                             if (listener.halt) await listener.halt({
-                                reason: CommandHaltReason.MissingMemberPermissions,
+                                reason: InteractionListenerHaltReason.MissingMemberPermissions,
                                 missingPermissions: new PermissionsBitField(channel.permissionsFor(interaction.member).missing(requiredMemberPermissions)),
                                 // @ts-expect-error Never type
                                 interaction
@@ -73,7 +73,7 @@ export class InteractionEventManager implements RecipleModuleData {
 
                         if (requiredBotPermissions && !await CommandPermissionsPrecondition.userHasPermissionsIn(channel ?? interaction.guild, requiredBotPermissions)) {
                             if (listener.halt) await listener.halt({
-                                reason: CommandHaltReason.MissingBotPermissions,
+                                reason: InteractionListenerHaltReason.MissingBotPermissions,
                                 missingPermissions: await CommandPermissionsPrecondition.getMissingPermissionsIn(channel ?? interaction.guild, requiredBotPermissions),
                                 // @ts-expect-error Never type
                                 interaction
@@ -92,7 +92,7 @@ export class InteractionEventManager implements RecipleModuleData {
 
                         if (isCooledDown) {
                             if (listener.halt) await listener.halt({
-                                reason: CommandHaltReason.Cooldown,
+                                reason: InteractionListenerHaltReason.Cooldown,
                                 cooldown: isCooledDown,
                                 // @ts-expect-error Never type
                                 interaction
@@ -110,7 +110,7 @@ export class InteractionEventManager implements RecipleModuleData {
                     await Promise.resolve(listener.execute(interaction));
                 } catch(error) {
                     const handled = listener.halt ? await listener.halt({
-                        reason: CommandHaltReason.Error,
+                        reason: InteractionListenerHaltReason.Error,
                         error,
                         // @ts-expect-error Never type
                         interaction
