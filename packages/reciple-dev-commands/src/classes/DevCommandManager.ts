@@ -43,7 +43,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         return [...this.contextMenuCommands.values(), ...this.messageCommands.values(), ...this.slashCommands.values()];
     };
 
-    public client!: RecipleClient;
+    public client!: RecipleClient<true>;
     public logger?: Logger;
     public devGuilds: string[];
     public devUsers: string[];
@@ -72,7 +72,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
     }
 
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
-        this.client = client;
+        this.client = client as RecipleClient<true>;
         this.logger = client.logger?.clone({ name: 'DevCommandManager' });
 
         if (!this.devGuilds.length && process.env.DEV_GUILD) this.devGuilds = process.env.DEV_GUILD.split(' ');
