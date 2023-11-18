@@ -1,7 +1,7 @@
 {
     "name": "reciple-anticrash",
     "description": "A simple crash handler for Reciple",
-    "version": "2.1.0",
+    "version": "2.1.1",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
