@@ -115,8 +115,8 @@ export class RegistryCacheManager implements RecipleModuleData {
     }
 
     public async updateLastCache(data: string): Promise<void> {
-        mkdir(this.cacheFolder, { recursive: true });
-        writeFile(this.registryCacheFile, data, 'utf-8');
+        await mkdir(this.cacheFolder, { recursive: true });
+        await writeFile(this.registryCacheFile, data, 'utf-8');
     }
 
     public async resolveLastCache(): Promise<string|undefined> {
