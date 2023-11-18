@@ -10,11 +10,11 @@
     "test": "npm run dev -w test"
   },
   "devDependencies": {
-    "@reciple/core": "^8.0.0",
-    "@types/node": "^20.9.0",
+    "@reciple/core": "^8.2.3",
+    "@types/node": "^20.9.1",
     "discord.js": "^14.14.1",
     "lerna": "^7.4.2",
-    "reciple": "^8.2.0",
+    "reciple": "^8.2.3",
     "rimraf": "^5.0.5",
     "typescript": "^5.1.6"
   }
