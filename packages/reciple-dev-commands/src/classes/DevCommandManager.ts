@@ -246,6 +246,8 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
 
     public isGuildAllowed(command: { guildId: string|null; }): boolean {
         if (this.allowExecuteInNonDevGuild) return true;
+        if (!this.devUsers.length) return false;
+
         return command.guildId ? this.devGuilds.includes(command.guildId) : false;
     }
 }
