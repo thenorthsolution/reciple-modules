@@ -11,11 +11,14 @@
   },
   "devDependencies": {
     "@reciple/core": "^8.2.3",
-    "@types/node": "^20.9.1",
+    "@types/node": "^20.11.16",
     "discord.js": "^14.14.1",
-    "lerna": "^7.4.2",
-    "reciple": "^8.2.3",
+    "lerna": "^8.0.2",
+    "reciple": "^8.3.1",
     "rimraf": "^5.0.5",
-    "typescript": "^5.1.6"
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "nodemon": "^3.0.3"
   }
 }
