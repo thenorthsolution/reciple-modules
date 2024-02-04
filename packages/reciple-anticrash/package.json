@@ -1,7 +1,7 @@
 {
     "name": "reciple-anticrash",
     "description": "A simple crash handler for Reciple",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
@@ -31,9 +31,9 @@
     },
     "dependencies": {
         "fallout-utility": "^2.8.0",
-        "reciple-dev-commands": "^2.1.1",
+        "reciple-dev-commands": "^2.1.2",
         "reciple-interaction-events": "^2.1.1",
-        "reciple-registry-cache": "^2.1.1"
+        "reciple-registry-cache": "^2.1.2"
     },
     "peerDependencies": {
         "@reciple/core": "^8.3.1"

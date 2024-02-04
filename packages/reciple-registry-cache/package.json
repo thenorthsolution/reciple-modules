@@ -1,7 +1,7 @@
 {
     "name": "reciple-registry-cache",
     "description": "Cache application commands to prevent register api spam",
-    "version": "2.1.1",
+    "version": "2.1.2",
     "license": "MIT",
     "main": "./dist/index.js",
     "module": "./dist/esm.mjs",
@@ -33,7 +33,7 @@
         "@reciple/core": "^8.2.0"
     },
     "optionalDependencies": {
-        "reciple-dev-commands": "^2.1.1"
+        "reciple-dev-commands": "^2.1.2"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
