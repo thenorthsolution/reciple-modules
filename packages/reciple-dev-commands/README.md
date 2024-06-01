@@ -8,8 +8,6 @@ Adds dev only commands to your Reciple bot
 npm i reciple-dev-commands
 ```
 
-Create a new module and export a an instance of `DevCommandManager`.
-
 ```js
 import { DevCommandManager } from 'reciple-dev-commands';
 
@@ -23,13 +21,13 @@ export default new DevCommandManager({
 });
 ```
 
-use `devCommands` property instead of `commands` when adding dev commands on your modules.
+## Example Dev Command
 
 ```js
 import { MessageCommandBuilder } from '@reciple/core';
 
 export default {
-    versions: '^8',
+    versions: '^9',
 
     // Normal commands
     commands: [
