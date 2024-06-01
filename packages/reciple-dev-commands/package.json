@@ -26,9 +26,6 @@
     "dependencies": {
         "fallout-utility": "^2.9.1"
     },
-    "devDependencies": {
-        "reciple-registry-cache": "^2.1.2"
-    },
     "peerDependencies": {
         "@reciple/core": "^9 || ^9.0.0-dev"
     },

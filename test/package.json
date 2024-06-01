@@ -9,9 +9,7 @@
     "dev": "nodemon --ext ts,mts,json --ignore ./modules --exec \"npm run build && reciple -c reciple.mjs\" --signal SIGHUP"
   },
   "dependencies": {
-    "@reciple/core": "^9.0.0-dev.8",
     "discord.js": "^14.15.2",
-    "reciple": "^9.0.0-dev.12",
     "reciple-anticrash": "*",
     "reciple-dev-commands": "*",
     "reciple-interaction-events": "*",
