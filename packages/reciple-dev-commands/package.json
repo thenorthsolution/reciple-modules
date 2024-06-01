@@ -3,19 +3,13 @@
     "description": "Add Reciple dev only commands",
     "version": "2.1.2",
     "license": "MIT",
-    "main": "./dist/index.js",
-    "module": "./dist/esm.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "recipleModule": "./dist/module.mjs",
+    "type": "module",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/esm.mjs",
-            "require": "./dist/index.js"
-        },
-        "./module": {
-            "import": "./dist/module.mjs",
-            "types": "./dist/module.d.mts"
+            "import": "./dist/index.js"
         }
     },
     "files": [
@@ -27,13 +21,13 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npm run clean && npx tsc --noEmitOnError true"
+        "build": "npm run clean && npx tsc"
     },
     "dependencies": {
         "fallout-utility": "^2.9.1"
     },
     "devDependencies": {
-        "reciple-registry-cache": "^2.0.0-dev.0"
+        "reciple-registry-cache": "^2.1.2"
     },
     "peerDependencies": {
         "@reciple/core": "^9 || ^9.0.0-dev"

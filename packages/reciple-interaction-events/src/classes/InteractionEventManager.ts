@@ -1,8 +1,8 @@
-import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerHaltReason, InteractionListenerType } from '../types/listeners';
+import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerHaltReason, InteractionListenerType } from '../types/listeners.js';
 import { CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
-import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule';
-import { InteractionEventListenerError } from './InteractionEventListenerError';
+import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule.js';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable } from 'discord.js';
+import { InteractionEventListenerError } from './InteractionEventListenerError.js';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -65,7 +65,7 @@ export class InteractionEventManager implements RecipleModuleData {
                             if (listener.halt) await listener.halt({
                                 reason: InteractionListenerHaltReason.MissingMemberPermissions,
                                 missingPermissions: new PermissionsBitField(channel.permissionsFor(interaction.member).missing(requiredMemberPermissions)),
-                                // @ts-expect-error Never type
+                                // @ts-expect-error LOL
                                 interaction
                             });
                             continue;
@@ -75,7 +75,7 @@ export class InteractionEventManager implements RecipleModuleData {
                             if (listener.halt) await listener.halt({
                                 reason: InteractionListenerHaltReason.MissingBotPermissions,
                                 missingPermissions: await CommandPermissionsPrecondition.getMissingPermissionsIn(channel ?? interaction.guild, requiredBotPermissions),
-                                // @ts-expect-error Never type
+                                // @ts-expect-error LOL
                                 interaction
                             });
                             continue;
@@ -94,7 +94,7 @@ export class InteractionEventManager implements RecipleModuleData {
                             if (listener.halt) await listener.halt({
                                 reason: InteractionListenerHaltReason.Cooldown,
                                 cooldown: isCooledDown,
-                                // @ts-expect-error Never type
+                                // @ts-expect-error LOL
                                 interaction
                             });
                             continue;
@@ -106,13 +106,13 @@ export class InteractionEventManager implements RecipleModuleData {
                         });
                     }
 
-                    // @ts-expect-error Never type
+                    // @ts-expect-error Sure
                     await Promise.resolve(listener.execute(interaction));
                 } catch(error) {
                     const handled = listener.halt ? await listener.halt({
                         reason: InteractionListenerHaltReason.Error,
                         error,
-                        // @ts-expect-error Never type
+                        // @ts-expect-error LOL
                         interaction
                     }) : null;
 

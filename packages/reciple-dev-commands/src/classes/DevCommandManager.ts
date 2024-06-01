@@ -1,7 +1,7 @@
 import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteOptions, RecipleClient, RecipleModuleData, RecipleModuleLoadData, RecipleModuleStartData, SlashCommandBuilder, Utils } from '@reciple/core';
-import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
-import type { RegistryCacheManager } from 'reciple-registry-cache';
+import { RecipleDevCommandModuleScript } from '../types/DevCommandModule.js';
 import { ApplicationCommand, Awaitable, Collection } from 'discord.js';
+import type { RegistryCacheManager } from 'reciple-registry-cache';
 import { TypedEmitter, getCommand } from 'fallout-utility';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';

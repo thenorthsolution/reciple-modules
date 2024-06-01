@@ -3,19 +3,13 @@
     "description": "Cache application commands to prevent register api spam",
     "version": "2.1.2",
     "license": "MIT",
-    "main": "./dist/index.js",
-    "module": "./dist/esm.mjs",
+    "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
-    "recipleModule": "./dist/module.mjs",
+    "type": "module",
     "exports": {
         ".": {
             "types": "./dist/index.d.ts",
-            "import": "./dist/esm.mjs",
-            "require": "./dist/index.js"
-        },
-        "./module": {
-            "import": "./dist/module.mjs",
-            "types": "./dist/module.d.mts"
+            "import": "./dist/index.js"
         }
     },
     "files": [
@@ -27,7 +21,7 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npm run clean && npx tsc --noEmitOnError true"
+        "build": "npm run clean && npx tsc"
     },
     "peerDependencies": {
         "@reciple/core": "^9 || ^9.0.0-dev"
