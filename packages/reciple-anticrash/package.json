@@ -24,7 +24,7 @@
         "build": "npm run clean && npx tsc"
     },
     "dependencies": {
-        "fallout-utility": "^2.8.0",
+        "fallout-utility": "^2.9.1",
         "reciple-dev-commands": "^3.0.0",
         "reciple-interaction-events": "^3.0.0",
         "reciple-registry-cache": "^3.0.0"
