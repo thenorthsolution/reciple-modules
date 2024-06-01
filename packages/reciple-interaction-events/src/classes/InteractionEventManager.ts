@@ -3,11 +3,12 @@ import { CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, Re
 import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule.js';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable } from 'discord.js';
 import { InteractionEventListenerError } from './InteractionEventListenerError.js';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 export class InteractionEventManager implements RecipleModuleData {
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
     readonly id: string = 'com.reciple.interaction-events';
     readonly name: string = this.packageJson.name;

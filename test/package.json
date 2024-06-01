@@ -1,0 +1,26 @@
+{
+  "name": "reciple-app",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "rimraf ./modules && tsc",
+    "start": "reciple -c reciple.mjs",
+    "build:start": "npm run build && reciple -c reciple.mjs",
+    "dev": "nodemon --ext ts,mts,json --ignore ./modules --exec \"npm run build && reciple -c reciple.mjs\" --signal SIGHUP"
+  },
+  "dependencies": {
+    "@reciple/core": "^9.0.0-dev.8",
+    "discord.js": "^14.15.2",
+    "reciple": "^9.0.0-dev.12",
+    "reciple-anticrash": "*",
+    "reciple-dev-commands": "*",
+    "reciple-interaction-events": "*",
+    "reciple-registry-cache": "*"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "nodemon": "^3.1.2",
+    "typescript": "^5.4.5",
+    "rimraf": "^5.0.7"
+  }
+}

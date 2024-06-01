@@ -2,11 +2,12 @@ import { AttachmentBuilder, BaseMessageOptions, codeBlock, EmbedBuilder, escapeC
 import { Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { inspect, stripVTControlCharacters } from 'node:util';
 import { limitString } from 'fallout-utility';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 export class RecipleAnticrash implements RecipleModuleData {
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
     readonly id: string = 'com.reciple.anticrash';
     readonly name: string = this.packageJson.name;
