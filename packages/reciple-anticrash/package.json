@@ -1,7 +1,7 @@
 {
     "name": "reciple-anticrash",
     "description": "A simple crash handler for Reciple",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "license": "MIT",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -24,10 +24,7 @@
         "build": "npm run clean && npx tsc"
     },
     "dependencies": {
-        "fallout-utility": "^2.9.1",
-        "reciple-dev-commands": "^3.0.0",
-        "reciple-interaction-events": "^3.0.0",
-        "reciple-registry-cache": "^3.0.0"
+        "fallout-utility": "^2.9.1"
     },
     "peerDependencies": {
         "@reciple/core": "^9 || ^9.0.0-dev"
