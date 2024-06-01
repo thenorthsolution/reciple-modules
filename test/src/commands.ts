@@ -10,6 +10,7 @@ export default {
             .setName('test')
             .setType('Message')
             .setExecute(async ({ interaction }) => {
+                throw new Error('E');
                 await interaction.reply(`Hello, world!`);
             }),
         new MessageCommandBuilder()
