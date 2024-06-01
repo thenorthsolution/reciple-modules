@@ -29,8 +29,14 @@
         "clean": "npx rimraf ./dist",
         "build": "npm run clean && npx tsc --noEmitOnError true"
     },
+    "dependencies": {
+        "fallout-utility": "^2.9.1"
+    },
+    "devDependencies": {
+        "reciple-registry-cache": "^2.0.0-dev.0"
+    },
     "peerDependencies": {
-        "@reciple/core": "^8.2.3"
+        "@reciple/core": "^9 || ^9.0.0-dev"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
@@ -39,11 +45,5 @@
     },
     "optionalDependencies": {
         "reciple-registry-cache": "^2.1.2"
-    },
-    "dependencies": {
-        "fallout-utility": "^2.5.1"
-    },
-    "devDependencies": {
-        "reciple-registry-cache": "^2.0.0-dev.0"
     }
 }

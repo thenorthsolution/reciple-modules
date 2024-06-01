@@ -36,7 +36,7 @@
         "reciple-registry-cache": "^2.1.2"
     },
     "peerDependencies": {
-        "@reciple/core": "^8.3.1"
+        "@reciple/core": "^9 || ^9.0.0-dev"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
