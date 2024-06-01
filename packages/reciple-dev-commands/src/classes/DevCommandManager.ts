@@ -1,8 +1,9 @@
 import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteOptions, RecipleClient, RecipleModuleData, RecipleModuleLoadData, RecipleModuleStartData, SlashCommandBuilder, Utils } from '@reciple/core';
-import { RecipleDevCommandModuleScript } from '../types/DevCommandModule';
-import type { RegistryCacheManager } from 'reciple-registry-cache';
+import { RecipleDevCommandModuleScript } from '../types/DevCommandModule.js';
 import { ApplicationCommand, Awaitable, Collection } from 'discord.js';
+import type { RegistryCacheManager } from 'reciple-registry-cache';
 import { TypedEmitter, getCommand } from 'fallout-utility';
+import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
@@ -30,7 +31,7 @@ export interface DevCommandManagerEvents {
 export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleData {
     private _prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
     private _argSeparator?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
     readonly id: string = 'com.reciple.dev-commands';
     readonly name: string = this.packageJson.name;

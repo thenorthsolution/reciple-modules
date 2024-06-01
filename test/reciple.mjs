@@ -1,7 +1,6 @@
+// @ts-check
 import { CooldownPrecondition, CommandPermissionsPrecondition } from 'reciple';
 import { IntentsBitField } from 'discord.js';
-
-// @ts-check
 
 /**
  * @satisfies {import('reciple').RecipleConfig}
@@ -51,7 +50,7 @@ export const config = {
     },
     logger: {
         enabled: true,
-        debugmode: true,
+        debugmode: null,
         coloredMessages: true,
         disableLogPrefix: false,
         logToFile: {
@@ -61,20 +60,19 @@ export const config = {
         }
     },
     modules: {
-        dirs: [
-            './modules',
-            './modules/test'
-        ],
+        dirs: ['./modules'],
         exclude: [],
+        filter: file => true,
         disableModuleVersionCheck: false
     },
     preconditions: [
-        CooldownPrecondition.create(),
-        CommandPermissionsPrecondition.create()
+        new CooldownPrecondition(),
+        new CommandPermissionsPrecondition()
     ],
+    commandHalts: [],
     cooldownSweeperOptions: {
         timer: 1000 * 60 * 60
     },
     checkForUpdates: true,
-    version: `^8.0.0`
+    version: `^9.0.0`
 };

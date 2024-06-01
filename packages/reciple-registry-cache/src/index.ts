@@ -1,1 +1,1 @@
-export * from './classes/RegistryCacheManager';
+export * from './classes/RegistryCacheManager.js';

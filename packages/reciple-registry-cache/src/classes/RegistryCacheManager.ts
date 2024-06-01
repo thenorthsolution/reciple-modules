@@ -4,6 +4,7 @@ import type { DevCommandManager } from 'reciple-dev-commands';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { existsSync, readFileSync } from 'node:fs';
 import { randomBytes } from 'node:crypto';
+import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import path from 'node:path';
 
@@ -14,7 +15,7 @@ export interface RegistryCacheManagerOptions {
 }
 
 export class RegistryCacheManager implements RecipleModuleData {
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(__dirname, '../../package.json'), 'utf-8'));
+    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
     readonly id: string = 'com.reciple.registry-cache';
     readonly name: string = this.packageJson.name;
@@ -25,7 +26,7 @@ export class RegistryCacheManager implements RecipleModuleData {
     private _loggedWarning: boolean = false;
 
     public devCommandsManager?: DevCommandManager;
-    public cacheFolder: string = path.join(__dirname, '../../.cache/');
+    public cacheFolder: string = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.cache/');
     public client!: RecipleClient<true>;
 
     public lastRegistryCheck: Date|null = null;

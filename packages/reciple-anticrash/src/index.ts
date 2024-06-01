@@ -1,1 +1,1 @@
-export * from './classes/RecipleAnticrash';
+export * from './classes/RecipleAnticrash.js';
