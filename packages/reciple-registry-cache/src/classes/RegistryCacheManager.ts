@@ -23,6 +23,7 @@ export interface RegistryCacheManagerOptions {
 }
 
 export interface RegistryCacheContent {
+    clientId: string;
     data: string;
     hash: string;
     createdAt: string;
@@ -130,6 +131,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         const hex = Buffer.from(JSON.stringify(data)).toString('hex');
 
         return {
+            clientId: this.client.user.id,
             data: hex,
             hash: RegistryCacheManager.createHash(hex),
             createdAt: new Date().toISOString(),
