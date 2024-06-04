@@ -154,7 +154,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         const age = Date.now() - createdAt.getTime();
 
         if (age >= (this.maxCacheAgeMs ?? Infinity)) return false;
-        return cached.hash === cached.hash;
+        return cached.hash === data.hash;
     }
 
     public async updateLastCache(data: RegistryCacheContent): Promise<void> {
