@@ -33,5 +33,8 @@
     },
     "optionalDependencies": {
         "reciple-dev-commands": "^3.0.1"
+    },
+    "dependencies": {
+        "@reciple/utils": "^9.0.1"
     }
 }

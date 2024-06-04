@@ -2,19 +2,35 @@ import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenu
 import { RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import type { DevCommandManager } from 'reciple-dev-commands';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { existsSync, readFileSync } from 'node:fs';
-import { randomBytes } from 'node:crypto';
+import { readFileSync } from 'node:fs';
+import { createHash, randomBytes } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import path from 'node:path';
+import { existsAsync } from '@reciple/utils';
 
 export type RESTPostAPICommand = RESTPostAPIChatInputApplicationCommandsJSONBody|RESTPostAPIContextMenuApplicationCommandsJSONBody;
 
 export interface RegistryCacheManagerOptions {
+    /**
+     * @default "./node_modules/.cache/reciple-registry-cache/"
+     */
     cacheFolder?: string;
+    /**
+     * @default 86400000 // 24 hours in milliseconds
+     */
+    maxCacheAgeMs?: number;
 }
 
-export class RegistryCacheManager implements RecipleModuleData {
+export interface RegistryCacheContent {
+    data: string;
+    hash: string;
+    createdAt: string;
+}
+
+export class RegistryCacheManager implements RecipleModuleData, RegistryCacheManagerOptions {
+    public static cacheFolder = path.join(process.cwd(), './node_modules/.cache/reciple-registry-cache/');
+
     private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
     readonly id: string = 'com.reciple.registry-cache';
@@ -26,10 +42,12 @@ export class RegistryCacheManager implements RecipleModuleData {
     private _loggedWarning: boolean = false;
 
     public devCommandsManager?: DevCommandManager;
-    public cacheFolder: string = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.cache/');
+    public cacheFolder: string = RegistryCacheManager.cacheFolder;
+    public maxCacheAgeMs?: number = 86400000;
     public client!: RecipleClient<true>;
 
     public lastRegistryCheck: Date|null = null;
+    public registryCache: RegistryCacheContent|null = null;
 
     get registryCacheFile() {
         return path.join(this.cacheFolder, this.client.user?.id ?? randomBytes(10).toString('hex'));
@@ -45,6 +63,12 @@ export class RegistryCacheManager implements RecipleModuleData {
 
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client as RecipleClient<true>;
+
+        if (this.cacheFolder === RegistryCacheManager.cacheFolder) {
+            const cli = await import('reciple').then(r => r.cli).catch(() => null);
+
+            if (cli) this.cacheFolder = path.join(cli.cwd, './node_modules/.cache/reciple-registry-cache/');
+        }
 
         return true;
     }
@@ -76,7 +100,7 @@ export class RegistryCacheManager implements RecipleModuleData {
             ...devCommands
         ].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
-        const data = this.encodeCommandsData(commands);
+        const data = await this.encodeCommandsData(commands);
 
         if (await this.isEqualToCache(data)) {
             if (!this._loggedWarning) this.client.logger?.warn(`Application commands did not change! Skipping command register...`);
@@ -93,35 +117,56 @@ export class RegistryCacheManager implements RecipleModuleData {
         await this.updateLastCache(data);
     }
 
-    public encodeCommandsData(commands: RESTPostAPICommand[]): string {
+    public async encodeCommandsData(commands: RESTPostAPICommand[]): Promise<RegistryCacheContent> {
         const data = {
             contextMenuCommands: this.client.config.commands?.contextMenuCommand,
             slashCommands: this.client.config.commands?.slashCommand,
             applicationCommandRegister: this.client.config.applicationCommandRegister,
             userId: this.client.user?.id,
             devCommandsGuilds: this.devCommandsManager?.devGuilds ?? [],
-            commands: inspect(commands, { depth: 5 })
+            commands: commands.map(c => Buffer.from(inspect(c, { depth: 10 })).toString('hex'))
         };
 
-        return Buffer.from(JSON.stringify(data)).toString('hex');
+        const hex = Buffer.from(JSON.stringify(data)).toString('hex');
+
+        return {
+            data: hex,
+            hash: RegistryCacheManager.createHash(hex),
+            createdAt: new Date().toISOString(),
+        };
     }
 
-    public async isEqualToCache(data: string): Promise<boolean> {
+    public static createHash(data: string): string {
+        const hash = createHash('md5');
+        hash.update(data, 'utf-8');
+        return hash.digest('hex');
+    }
+
+    public async isEqualToCache(data: RegistryCacheContent): Promise<boolean> {
         this.lastRegistryCheck = new Date();
 
-        const cachedId = await this.resolveLastCache();
-        if (cachedId === undefined) return false;
+        const cached = await this.resolveLastCache();
+        if (!cached) return false;
 
-        return cachedId === data;
+        const createdAt = new Date(cached.createdAt);
+        const age = Date.now() - createdAt.getTime();
+
+        if (age >= (this.maxCacheAgeMs ?? Infinity)) return false;
+        return cached.hash === cached.hash;
     }
 
-    public async updateLastCache(data: string): Promise<void> {
+    public async updateLastCache(data: RegistryCacheContent): Promise<void> {
         await mkdir(this.cacheFolder, { recursive: true });
-        await writeFile(this.registryCacheFile, data, 'utf-8');
+        await writeFile(this.registryCacheFile, JSON.stringify(data, null, 2), 'utf-8');
     }
 
-    public async resolveLastCache(): Promise<string|undefined> {
-        if (!existsSync(this.registryCacheFile)) return;
-        return readFile(this.registryCacheFile, 'utf-8');
+    public async resolveLastCache(): Promise<RegistryCacheContent|null> {
+        if (!await existsAsync(this.registryCacheFile)) return null;
+
+        try {
+            return JSON.parse(await readFile(this.registryCacheFile, 'utf-8'));
+        } catch (err) {
+            return null;
+        }
     }
 }
