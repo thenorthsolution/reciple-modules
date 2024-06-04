@@ -1,7 +1,7 @@
 {
     "name": "reciple-registry-cache",
     "description": "Cache application commands to prevent register api spam",
-    "version": "3.0.1",
+    "version": "3.1.0",
     "license": "MIT",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -32,7 +32,7 @@
         }
     },
     "optionalDependencies": {
-        "reciple-dev-commands": "^3.0.1"
+        "reciple-dev-commands": "^3.1.0"
     },
     "dependencies": {
         "@reciple/utils": "^9.0.1"
