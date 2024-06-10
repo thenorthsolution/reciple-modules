@@ -2,7 +2,7 @@
     "name": "reciple-dev-commands",
     "description": "Add Reciple dev only commands",
     "initialModuleContent": "./modules/reciple.js",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "license": "MIT",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -37,6 +37,6 @@
         }
     },
     "optionalDependencies": {
-        "reciple-registry-cache": "^3.1.0"
+        "reciple-registry-cache": "^3.2.0"
     }
 }

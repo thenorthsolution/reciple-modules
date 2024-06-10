@@ -2,7 +2,7 @@
     "name": "reciple-anticrash",
     "description": "A simple crash handler for Reciple",
     "initialModuleContent": "./modules/reciple.js",
-    "version": "3.1.0",
+    "version": "3.2.0",
     "license": "MIT",
     "module": "./dist/index.js",
     "types": "./dist/index.d.ts",
