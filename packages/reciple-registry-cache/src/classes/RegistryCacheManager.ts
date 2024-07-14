@@ -30,6 +30,12 @@ export interface RegistryCacheContent {
     createdAt: string;
 }
 
+export interface RegistryCacheManager extends RecipleModuleData, RegistryCacheManagerOptions {
+    id: string;
+    name: string;
+    versions: string;
+}
+
 const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({

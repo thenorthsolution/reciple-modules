@@ -7,6 +7,12 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { readFile } from 'node:fs/promises';
 
+export interface RecipleAnticrash extends RecipleModuleData {
+    id: string;
+    name: string;
+    versions: string;
+}
+
 const packageJson: PackageJson = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({

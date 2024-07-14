@@ -33,7 +33,7 @@ export interface DevCommandManagerEvents {
 export interface DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvents>, RecipleModuleData {
     id: string;
     name: string;
-    versions: string[];
+    versions: string;
 }
 
 const packageJson: PackageJson = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'))

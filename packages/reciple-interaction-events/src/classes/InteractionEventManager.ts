@@ -8,6 +8,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
+export interface InteractionEventManager extends RecipleModuleData {
+    id: string;
+    name: string;
+    versions: string;
+}
+
 const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({
