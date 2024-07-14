@@ -1,24 +1,14 @@
 import { CommandType, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
 import { setMessageCommand, setRecipleModule, setRecipleModuleStart, setSlashCommand } from '@reciple/decorators';
-import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions } from 'discord.js';
-import { AnyInteractionListener, InteractionListenerType } from 'reciple-interaction-events';
+import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions, type ButtonInteraction } from 'discord.js';
+import { InteractionListenerType, registerInteractionListeners, setInteractionEvent } from 'reciple-interaction-events';
 
 @setRecipleModule({
     id: 'com.reciple.commands'
 })
 export class Module implements RecipleModuleData {
-    interactionListeners: AnyInteractionListener[] = [
-        {
-            type: InteractionListenerType.Button,
-            customId: 'refresh-ping',
-            execute: async interaction => {
-                await interaction.deferUpdate();
-                await interaction.message.edit(this.createPingMessageOptions(interaction.client.ws.ping));
-            }
-        }
-    ];
-
     @setRecipleModuleStart()
+    @registerInteractionListeners()
     async onStart(): Promise<boolean> {
         return true;
     }
@@ -40,6 +30,12 @@ export class Module implements RecipleModuleData {
                 await data.message.reply(this.createPingMessageOptions(data.client.ws.ping));
                 break;
         }
+    }
+
+    @setInteractionEvent(InteractionListenerType.Button, { customId: 'refresh-ping' })
+    async pingRefresh(interaction: ButtonInteraction): Promise<void> {
+        await interaction.deferUpdate();
+        await interaction.message.edit(this.createPingMessageOptions(interaction.client.ws.ping));
     }
 
     createPingMessageOptions(ping: number): BaseMessageOptions {

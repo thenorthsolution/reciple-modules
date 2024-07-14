@@ -33,12 +33,14 @@ export function registerInteractionListeners() {
                 this.interactionListeners.push(listener);
             }
 
+            this[interactionEventListenerModuleMetadataSymbol] = metadata;
+
             return originalValue.call(this, ...args);
         }
     }
 }
 
-export function setInteractionEvent<T extends InteractionListenerType>(type: T, data: Omit<InteractionListenerGuard<T>, 'execute'|'type'>) {
+export function setInteractionEvent<T extends InteractionListenerType>(type: T, data?: Omit<InteractionListenerGuard<T>, 'execute'|'type'>) {
     return function(target: { constructor: { prototype: { [interactionEventListenerModuleMetadataSymbol]: RecipleInteractionListenerModuleMetadata; } } }, propertyKey: string, descriptor?: PropertyDescriptor) {
         const originalValue = descriptor?.value;
         if (!descriptor?.value || typeof originalValue !== 'function') throw new Error(`@setInteractionEvent must be used on a method`);
@@ -51,5 +53,7 @@ export function setInteractionEvent<T extends InteractionListenerType>(type: T, 
             ...data,
             execute: originalValue
         } as InteractionListenerGuard<T>);
+
+        target.constructor.prototype[interactionEventListenerModuleMetadataSymbol] = metadata;
     }
 }
