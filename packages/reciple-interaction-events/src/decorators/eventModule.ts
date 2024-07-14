@@ -15,7 +15,20 @@ export function registerInteractionListeners() {
 
             if (metadata.interactionEvents.length > 0) for (const listener of metadata.interactionEvents) {
                 const originalExecute = listener.execute as (...args: unknown[]) => void;
+                const originalHalt = listener.halt as (...args: unknown[]) => boolean;
+                const originalIdentifier = ('customId' in listener
+                    ? listener.customId
+                    : 'commandName' in listener
+                        ? listener.commandName
+                        : undefined) as string|((...args: unknown[]) => boolean)|undefined;
+
                 listener.execute = (...args: any[]) => originalExecute.call(this, ...args);
+
+                if (originalHalt) listener.halt = (...args: any[]) => originalHalt.call(this, ...args);
+                if (originalIdentifier && typeof originalIdentifier === 'function') {
+                    if ('customId' in listener) listener.customId = (...args: any[]) => originalIdentifier.call(this, ...args);
+                    if ('commandName' in listener) listener.commandName = (...args: any[]) => originalIdentifier.call(this, ...args);
+                }
 
                 this.interactionListeners.push(listener);
             }
