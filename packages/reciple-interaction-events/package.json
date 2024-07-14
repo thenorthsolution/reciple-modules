@@ -23,7 +23,8 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npm run clean && npx tsc"
+        "build": "npm run clean && npx tsc",
+        "prepack": "npm run build"
     },
     "peerDependencies": {
         "@reciple/core": "^9.4.0"

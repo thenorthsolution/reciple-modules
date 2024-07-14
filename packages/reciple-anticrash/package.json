@@ -23,7 +23,8 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npm run clean && npx tsc"
+        "build": "npm run clean && npx tsc",
+        "prepack": "npm run build"
     },
     "dependencies": {
         "@reciple/decorators": "^9.1.1",

@@ -26,7 +26,8 @@
         "build": "npm run clean && npx tsc"
     },
     "peerDependencies": {
-        "@reciple/core": "^9.4.0"
+        "@reciple/core": "^9.4.0",
+        "prepack": "npm run build"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
