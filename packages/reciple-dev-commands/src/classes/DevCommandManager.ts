@@ -2,11 +2,12 @@ import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, Comma
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule.js';
 import { ApplicationCommand, Awaitable, Collection, type Interaction, type Message } from 'discord.js';
 import type { RegistryCacheManager } from 'reciple-registry-cache';
-import { TypedEmitter, getCommand, type PackageJson } from 'fallout-utility';
+import { getCommand, type PackageJson } from 'fallout-utility';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
+import { StrictTypedEmitter } from 'fallout-utility/StrictTypedEmitter';
 
 export interface DevCommandManagerOptions {
     prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
@@ -25,8 +26,14 @@ export interface DevCommandManagerOptions {
 }
 
 export interface DevCommandManagerEvents {
-    registerApplicationCommands: [commands: ApplicationCommand, guildId: string];
+    registerApplicationCommands: [commands: Collection<string, ApplicationCommand>, guildId: string];
     commandExecute: [command: AnyCommandExecuteData];
+}
+
+export interface DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvents>, RecipleModuleData {
+    id: string;
+    name: string;
+    versions: string[];
 }
 
 const packageJson: PackageJson = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'))
@@ -36,7 +43,7 @@ const packageJson: PackageJson = JSON.parse(readFileSync(path.join(path.dirname(
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })
-export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleData {
+export class DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvents> implements RecipleModuleData {
     private _prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
     private _argSeparator?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
 
@@ -172,11 +179,13 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             return;
         }
 
-        this.emit('commandExecute', await MessageCommandBuilder.execute({
+        const executeData = await MessageCommandBuilder.execute({
             client: this.client,
             message,
             command: devCommand
-        }));
+        });
+
+        if (executeData) this.emit('commandExecute', executeData);
     }
 
     @setClientEvent('interactionCreate')
@@ -194,11 +203,13 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 return;
             }
 
-            this.emit('commandExecute', await SlashCommandBuilder.execute({
+            const executeData = await SlashCommandBuilder.execute({
                 client: this.client,
                 interaction,
                 command: devCommand
-            }));
+            });
+
+            if (executeData) this.emit('commandExecute', executeData);
         } else if (interaction.isContextMenuCommand()) {
             const clientCommand = this.client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
             const devCommand = this.contextMenuCommands.get(interaction.commandName);
@@ -210,11 +221,13 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
                 return;
             }
 
-            this.emit('commandExecute', await ContextMenuCommandBuilder.execute({
+            const executeData = await ContextMenuCommandBuilder.execute({
                 client: this.client,
                 interaction,
                 command: devCommand
-            }));
+            });
+
+            if (executeData) this.emit('commandExecute', executeData);
         }
     }
 
