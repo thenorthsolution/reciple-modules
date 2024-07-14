@@ -1,44 +1,63 @@
-import { SlashCommandBuilder, ContextMenuCommandBuilder, MessageCommandBuilder, RecipleModuleData } from 'reciple';
+import { CommandType, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
+import { setMessageCommand, setRecipleModule, setRecipleModuleStart, setSlashCommand } from '@reciple/decorators';
+import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions } from 'discord.js';
+import { AnyInteractionListener, InteractionListenerType } from 'reciple-interaction-events';
 
-export default {
-    // Supported client versions
-    versions: ['^9'],
+@setRecipleModule({
+    id: 'com.reciple.commands'
+})
+export class Module implements RecipleModuleData {
+    interactionListeners: AnyInteractionListener[] = [
+        {
+            type: InteractionListenerType.Button,
+            customId: 'refresh-ping',
+            execute: async interaction => {
+                await interaction.deferUpdate();
+                await interaction.message.edit(this.createPingMessageOptions(interaction.client.ws.ping));
+            }
+        }
+    ];
 
-    // Module commands
-    commands: [
-        new ContextMenuCommandBuilder()
-            .setName('test')
-            .setType('Message')
-            .setExecute(async ({ interaction }) => {
-                await interaction.reply(`Hello, world!`);
-            }),
-        new MessageCommandBuilder()
-            .setName('test')
-            .setDescription('A test command')
-            .setExecute(async ({ message }) => {
-                await message.reply(`Hello, world!`);
-            }),
-        new SlashCommandBuilder()
-            .setName('test')
-            .setDescription('A test command')
-            .setExecute(async ({ interaction }) => {
-                await interaction.reply(`Hello, world!`);
-            })
-    ],
-
-    // Executed when module is started (Bot is not logged in)
-    onStart: ({ client }) => {
-        return true; // Return true when the module is loaded, false if not
-    },
-
-    // Executed when module is loaded (Bot is logged in)
-    onLoad: ({ client }) => {
-        // Return/throw a string or error on load fail
-    },
-
-
-    // Executed when module is unloaded
-    onUnload: ({ client }) => {
-        // Return/throw a string or error on unload fail
+    @setRecipleModuleStart()
+    async onStart(): Promise<boolean> {
+        return true;
     }
-} satisfies RecipleModuleData;
+
+    @setSlashCommand({ name: 'error', description: 'test' })
+    async handleErrorCommand(): Promise<void> {
+        throw new Error('Test Error');
+    }
+
+    @setMessageCommand({ name: 'ping', description: 'Ping command' })
+    @setSlashCommand({ name: 'ping', description: 'Ping command' })
+    async pingCommand(data: AnyCommandExecuteData): Promise<void> {
+        switch (data.type) {
+            case CommandType.ContextMenuCommand:
+            case CommandType.SlashCommand:
+                await data.interaction.reply(this.createPingMessageOptions(data.client.ws.ping));
+                break;
+            case CommandType.MessageCommand:
+                await data.message.reply(this.createPingMessageOptions(data.client.ws.ping));
+                break;
+        }
+    }
+
+    createPingMessageOptions(ping: number): BaseMessageOptions {
+        return {
+            content: ping + 'ms',
+            components: [
+                {
+                    type: ComponentType.ActionRow,
+                    components: [
+                        new ButtonBuilder()
+                            .setCustomId('refresh-ping')
+                            .setLabel('Refresh')
+                            .setStyle(ButtonStyle.Secondary)
+                    ]
+                }
+            ]
+        };
+    }
+}
+
+export default new Module();

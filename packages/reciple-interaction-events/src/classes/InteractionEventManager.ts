@@ -6,14 +6,16 @@ import { InteractionEventListenerError } from './InteractionEventListenerError.j
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
+const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
+
+@setRecipleModule({
+    id: 'com.reciple.interaction-events',
+    name: packageJson.name,
+    versions: packageJson.peerDependencies?.['@reciple/core'],
+})
 export class InteractionEventManager implements RecipleModuleData {
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
-
-    readonly id: string = 'com.reciple.interaction-events';
-    readonly name: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
-
     public client!: RecipleClient;
     public logger?: Logger;
 
@@ -21,6 +23,7 @@ export class InteractionEventManager implements RecipleModuleData {
         this.emitInteraction = this.emitInteraction.bind(this);
     }
 
+    @setRecipleModuleStart()
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'InteractionEventManager' });
@@ -28,14 +31,13 @@ export class InteractionEventManager implements RecipleModuleData {
         return true;
     }
 
-    public async onLoad(): Promise<void> {
-        this.client.on('interactionCreate', this.emitInteraction);
-    }
+    @setRecipleModuleLoad()
+    public async onLoad(): Promise<void> {}
 
-    public async onUnload(): Promise<void> {
-        this.client.removeListener('interactionCreate', this.emitInteraction);
-    }
+    @setRecipleModuleUnload()
+    public async onUnload(): Promise<void> {}
 
+    @setClientEvent('interactionCreate')
     public async emitInteraction(interaction: Parameters<AnyInteractionListener['execute']>[0]): Promise<void> {
         let scripts: RecipleInteractionListenerModule[] = this.client.modules.cache.map(s => s.data as RecipleInteractionListenerModule);
 

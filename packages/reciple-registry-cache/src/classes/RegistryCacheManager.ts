@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import path from 'node:path';
 import { existsAsync } from '@reciple/utils';
+import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
 export type RESTPostAPICommand = RESTPostAPIChatInputApplicationCommandsJSONBody|RESTPostAPIContextMenuApplicationCommandsJSONBody;
 
@@ -29,14 +30,15 @@ export interface RegistryCacheContent {
     createdAt: string;
 }
 
+const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
+
+@setRecipleModule({
+    id: 'com.reciple.registry-cache',
+    name: packageJson.name,
+    versions: packageJson.peerDependencies?.['@reciple/core'],
+})
 export class RegistryCacheManager implements RecipleModuleData, RegistryCacheManagerOptions {
     public static cacheFolder = path.join(process.cwd(), './node_modules/.cache/reciple-registry-cache/');
-
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
-
-    readonly id: string = 'com.reciple.registry-cache';
-    readonly name: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
 
     private _isCommandsCached: boolean = false;
     private _DevCommandManager: typeof DevCommandManager|null = null;
@@ -62,6 +64,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         this.cacheFolder = options?.cacheFolder ?? this.cacheFolder;
     }
 
+    @setRecipleModuleStart()
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client as RecipleClient<true>;
 
@@ -74,12 +77,16 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         return true;
     }
 
+    @setRecipleModuleLoad()
     public async onLoad(): Promise<void> {
         const DevCommandManager = await import('reciple-dev-commands').then(data => data.DevCommandManager).catch(() => null);
         this._DevCommandManager = DevCommandManager ?? null;
 
         await this.checkRegistryCache();
     }
+
+    @setRecipleModuleUnload()
+    public async onUnload(): Promise<void> {}
 
     public async checkRegistryCache(): Promise<void> {
         let devCommands: RESTPostAPICommand[] = [];

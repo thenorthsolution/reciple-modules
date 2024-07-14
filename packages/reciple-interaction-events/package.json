@@ -26,11 +26,14 @@
         "build": "npm run clean && npx tsc"
     },
     "peerDependencies": {
-        "@reciple/core": "^9 || ^9.0.0-dev"
+        "@reciple/core": "^9.4.0"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
             "optional": true
         }
+    },
+    "dependencies": {
+        "@reciple/decorators": "^9.1.1"
     }
 }

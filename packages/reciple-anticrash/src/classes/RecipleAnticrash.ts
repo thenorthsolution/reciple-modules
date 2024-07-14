@@ -1,18 +1,20 @@
 import { AttachmentBuilder, BaseMessageOptions, codeBlock, EmbedBuilder, escapeCodeBlock, Message, TextBasedChannel } from 'discord.js';
+import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 import { Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { inspect, stripVTControlCharacters } from 'node:util';
-import { limitString } from 'fallout-utility';
+import { limitString, type PackageJson } from 'fallout-utility';
 import { fileURLToPath } from 'node:url';
-import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { readFile } from 'node:fs/promises';
 
+const packageJson: PackageJson = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
+
+@setRecipleModule({
+    id: 'com.reciple.anticrash',
+    name: packageJson.name,
+    versions: packageJson.peerDependencies?.['@reciple/core'],
+})
 export class RecipleAnticrash implements RecipleModuleData {
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
-
-    readonly id: string = 'com.reciple.anticrash';
-    readonly name: string = this.packageJson.name;
-
-    public versions: string = this.packageJson.peerDependencies['@reciple/core'];
     public client!: RecipleClient;
     public logger?: Logger;
 
@@ -25,6 +27,7 @@ export class RecipleAnticrash implements RecipleModuleData {
         this._eventListener = this._eventListener.bind(this);
     }
 
+    @setRecipleModuleStart()
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
         this.logger = client.logger?.clone({ name: 'AntiCrash' });
@@ -32,10 +35,8 @@ export class RecipleAnticrash implements RecipleModuleData {
         return true;
     }
 
+    @setRecipleModuleLoad()
     public async onLoad(): Promise<void> {
-        this.client.on('error', this._eventListener);
-        this.client.on('shardError', this._eventListener);
-        this.client.on('recipleError', this._eventListener);
         this.logger?.log(`Listening to client error events!`);
 
         process.on('uncaughtException', this._eventListener);
@@ -44,10 +45,8 @@ export class RecipleAnticrash implements RecipleModuleData {
         this.logger?.log(`Listening to process error events!`);
     }
 
+    @setRecipleModuleUnload()
     public async onUnload(): Promise<void> {
-        this.client.removeListener('error', this._eventListener);
-        this.client.removeListener('shardError', this._eventListener);
-        this.client.removeListener('recipleError', this._eventListener);
         this.logger?.log(`Removed client error event listeners.`);
 
         process.removeListener('uncaughtException', this._eventListener);
@@ -108,7 +107,10 @@ export class RecipleAnticrash implements RecipleModuleData {
         return null;
     }
 
-    private async _eventListener(err: any): Promise<void> {
-        await this.report(err);
+    @setClientEvent('error')
+    @setClientEvent('shardError')
+    @setClientEvent('recipleError')
+    private async _eventListener(...args: any[]): Promise<void> {
+        if (args[0]) await this.report(args[0]);
     }
 }

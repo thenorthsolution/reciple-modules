@@ -1,11 +1,12 @@
 import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteOptions, RecipleClient, RecipleModuleData, RecipleModuleLoadData, RecipleModuleStartData, SlashCommandBuilder, Utils } from '@reciple/core';
 import { RecipleDevCommandModuleScript } from '../types/DevCommandModule.js';
-import { ApplicationCommand, Awaitable, Collection } from 'discord.js';
+import { ApplicationCommand, Awaitable, Collection, type Interaction, type Message } from 'discord.js';
 import type { RegistryCacheManager } from 'reciple-registry-cache';
-import { TypedEmitter, getCommand } from 'fallout-utility';
+import { TypedEmitter, getCommand, type PackageJson } from 'fallout-utility';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
 export interface DevCommandManagerOptions {
     prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
@@ -28,14 +29,17 @@ export interface DevCommandManagerEvents {
     commandExecute: [command: AnyCommandExecuteData];
 }
 
+const packageJson: PackageJson = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'))
+
+@setRecipleModule({
+    id: 'com.reciple.dev-commands',
+    name: packageJson.name,
+    versions: packageJson.peerDependencies?.['@reciple/core'],
+})
 export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> implements RecipleModuleData {
     private _prefix?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
     private _argSeparator?: string|((data: MessageCommandExecuteOptions) => Awaitable<string>);
-    private packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
-    readonly id: string = 'com.reciple.dev-commands';
-    readonly name: string = this.packageJson.name;
-    readonly versions: string = this.packageJson.peerDependencies['@reciple/core'];
     readonly contextMenuCommands: Collection<string, ContextMenuCommandBuilder> = new Collection();
     readonly messageCommands: Collection<string, MessageCommandBuilder> = new Collection();
     readonly slashCommands: Collection<string, AnySlashCommandBuilder> = new Collection();
@@ -72,6 +76,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         this.ignoreCommandsCacheRegister = options?.ignoreCommandsCacheRegister ?? false;
     }
 
+    @setRecipleModuleStart()
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client as RecipleClient<true>;
         this.logger = client.logger?.clone({ name: 'DevCommandManager' });
@@ -81,6 +86,7 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
         return true;
     }
 
+    @setRecipleModuleLoad()
     public async onLoad({ client }: RecipleModuleLoadData): Promise<void> {
         const RegistryCacheManager = await import('reciple-registry-cache').then(data => data.RegistryCacheManager).catch(() => null);
 
@@ -142,69 +148,74 @@ export class DevCommandManager extends TypedEmitter<DevCommandManagerEvents> imp
             this.logger?.log(`Loaded (${this.messageCommands.size}) message command(s)`);
             this.logger?.log(`Loaded (${this.slashCommands.size}) slash command(s)`);
         });
+    }
 
-        client.on('messageCreate', async message => {
-            if (!this.devGuilds.length && !this.devUsers.length) return;
+    @setRecipleModuleUnload()
+    public async onUnload(): Promise<void> {}
 
-            const prefix = await this.getCommandPrefix({ client: this.client, message });
-            const argSeparator = await this.getCommandArgSeparator({ client: this.client, message });
-            const commandData = getCommand(message.content, prefix, argSeparator);
-            if (!commandData || !commandData.name) return;
+    @setClientEvent('messageCreate')
+    public async handleDevMessageCommand(message: Message): Promise<void> {
+        if (!this.devGuilds.length && !this.devUsers.length) return;
 
-            const clientCommand = client.commands.get(commandData.name, CommandType.MessageCommand);
-            const devCommand = this.messageCommands.get(commandData.name);
+        const prefix = await this.getCommandPrefix({ client: this.client, message });
+        const argSeparator = await this.getCommandArgSeparator({ client: this.client, message });
+        const commandData = getCommand(message.content, prefix, argSeparator);
+        if (!commandData || !commandData.name) return;
 
-            if (!devCommand || !this.isGuildAllowed(message)) return;
-            if (this.devUsers.length && !this.devUsers.includes(message.author.id)) return;
+        const clientCommand = this.client.commands.get(commandData.name, CommandType.MessageCommand);
+        const devCommand = this.messageCommands.get(commandData.name);
+
+        if (!devCommand || !this.isGuildAllowed(message)) return;
+        if (this.devUsers.length && !this.devUsers.includes(message.author.id)) return;
+        if (clientCommand && devCommand) {
+            this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
+            return;
+        }
+
+        this.emit('commandExecute', await MessageCommandBuilder.execute({
+            client: this.client,
+            message,
+            command: devCommand
+        }));
+    }
+
+    @setClientEvent('interactionCreate')
+    public async handleDevInteractionCommand(interaction: Interaction): Promise<void> {
+        if (!this.devGuilds.length && !this.devUsers.length) return;
+
+        if (interaction.isChatInputCommand()) {
+            const clientCommand = this.client.commands.get(interaction.commandName, CommandType.SlashCommand);
+            const devCommand = this.slashCommands.get(interaction.commandName);
+
+            if (!devCommand || !this.isGuildAllowed(interaction)) return;
+            if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
             if (clientCommand && devCommand) {
-                this.logger?.warn(`Found conflicting message command from client and dev commands: ${commandData.name}`);
+                this.logger?.warn(`Found conflicting slash command from client and dev commands: ${devCommand.name}`);
                 return;
             }
 
-            this.emit('commandExecute', await MessageCommandBuilder.execute({
+            this.emit('commandExecute', await SlashCommandBuilder.execute({
                 client: this.client,
-                message,
+                interaction,
                 command: devCommand
             }));
-        });
+        } else if (interaction.isContextMenuCommand()) {
+            const clientCommand = this.client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
+            const devCommand = this.contextMenuCommands.get(interaction.commandName);
 
-        client.on('interactionCreate', async interaction => {
-            if (!this.devGuilds.length && !this.devUsers.length) return;
-
-            if (interaction.isChatInputCommand()) {
-                const clientCommand = client.commands.get(interaction.commandName, CommandType.SlashCommand);
-                const devCommand = this.slashCommands.get(interaction.commandName);
-
-                if (!devCommand || !this.isGuildAllowed(interaction)) return;
-                if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
-                if (clientCommand && devCommand) {
-                    this.logger?.warn(`Found conflicting slash command from client and dev commands: ${devCommand.name}`);
-                    return;
-                }
-
-                this.emit('commandExecute', await SlashCommandBuilder.execute({
-                    client: this.client,
-                    interaction,
-                    command: devCommand
-                }));
-            } else if (interaction.isContextMenuCommand()) {
-                const clientCommand = client.commands.get(interaction.commandName, CommandType.ContextMenuCommand);
-                const devCommand = this.contextMenuCommands.get(interaction.commandName);
-
-                if (!devCommand || !this.isGuildAllowed(interaction)) return;
-                if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
-                if (clientCommand && devCommand) {
-                    this.logger?.warn(`Found conflicting context menu command from client and dev commands: ${devCommand.name}`);
-                    return;
-                }
-
-                this.emit('commandExecute', await ContextMenuCommandBuilder.execute({
-                    client: this.client,
-                    interaction,
-                    command: devCommand
-                }));
+            if (!devCommand || !this.isGuildAllowed(interaction)) return;
+            if (this.devUsers.length && !this.devUsers.includes(interaction.user.id)) return;
+            if (clientCommand && devCommand) {
+                this.logger?.warn(`Found conflicting context menu command from client and dev commands: ${devCommand.name}`);
+                return;
             }
-        });
+
+            this.emit('commandExecute', await ContextMenuCommandBuilder.execute({
+                client: this.client,
+                interaction,
+                command: devCommand
+            }));
+        }
     }
 
     public async getModuleDevCommands(script: RecipleDevCommandModuleScript): Promise<AnyCommandBuilder[]> {
