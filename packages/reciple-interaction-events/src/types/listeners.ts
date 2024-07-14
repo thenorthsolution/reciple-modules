@@ -84,3 +84,16 @@ export type AnyInteractionListener = AnyCommandInteractionListener|AnyComponentI
 
 export type AnyCommandInteraction = AutocompleteInteraction|ChatInputCommandInteraction|ContextMenuCommandInteraction;
 export type AnyComponentInteraction = ButtonInteraction|ModalSubmitInteraction|AnySelectMenuInteraction;
+export type InteractionListenerGuard<T extends InteractionListenerType> = T extends InteractionListenerType.Autocomplete
+    ? AutocompleteInteractionListener
+    : T extends InteractionListenerType.ChatInput
+        ? ChatInputInteractionListener
+        : T extends InteractionListenerType.ContextMenu
+            ? ContextMenuInteractionListener
+            : T extends InteractionListenerType.Button
+                ? ButtonInteractionListener
+                : T extends InteractionListenerType.ModalSubmit
+                    ? ModalSubmitInteractionListener
+                    : T extends InteractionListenerType.SelectMenu
+                        ? SelectMenuInteractionListener
+                        : AnyInteractionListener;
