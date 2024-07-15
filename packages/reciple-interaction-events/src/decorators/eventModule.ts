@@ -1,6 +1,6 @@
 import { interactionEventListenerModuleMetadataSymbol } from '../types/constants.js';
 import type { InteractionListenerGuard, InteractionListenerType } from '../types/listeners.js';
-import type { RecipleInteractionEventsModuleData, RecipleInteractionListenerModuleMetadata } from '../types/RecipleInteractionEventsModuleData.js';
+import type { RecipleInteractionEventsModuleData, RecipleInteractionListenerModuleMetadata } from '../types/structures.js';
 
 /**
  * Registers the interaction event listeners for the module

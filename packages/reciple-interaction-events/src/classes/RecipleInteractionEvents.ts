@@ -1,12 +1,12 @@
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerHaltReason, InteractionListenerType, type AnyInteractionListenerHaltData, type InteractionListener } from '../types/listeners.js';
 import { CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
-import { RecipleInteractionEventsModuleData } from '../types/RecipleInteractionEventsModuleData.js';
+import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable, type Interaction } from 'discord.js';
 import { InteractionEventListenerError } from './InteractionEventListenerError.js';
+import { RecipleInteractionEventsModuleData } from '../types/structures.js';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
-import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
 export interface RecipleInteractionEventsOptions {
     defaultHalt?: Exclude<InteractionListener<Interaction>['halt'], undefined>;
