@@ -22,7 +22,7 @@ export interface RecipleInteractionEvents extends RecipleModuleData {
 const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({
-    id: 'com.reciple.interaction-events',
+    id: 'org.reciple.js.interaction-events',
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })

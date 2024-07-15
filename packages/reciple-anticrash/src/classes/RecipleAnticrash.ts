@@ -28,7 +28,7 @@ export interface RecipleAnticrash extends RecipleModuleData {
 const packageJson: PackageJson = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({
-    id: 'com.reciple.anticrash',
+    id: 'org.reciple.js.anticrash',
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })

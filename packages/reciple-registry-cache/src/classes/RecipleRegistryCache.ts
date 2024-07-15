@@ -39,7 +39,7 @@ export interface RecipleRegistryCache extends RecipleModuleData, RecipleRegistry
 const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'));
 
 @setRecipleModule({
-    id: 'com.reciple.registry-cache',
+    id: 'org.reciple.js.registry-cache',
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })
