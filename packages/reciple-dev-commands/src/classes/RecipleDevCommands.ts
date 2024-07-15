@@ -1,17 +1,18 @@
-import { CommandType, ContextMenuCommandBuilder, MessageCommandBuilder, SlashCommandBuilder, Utils, type AnyCommandBuilder, type RecipleClient, type RecipleModuleData, type RecipleModuleLoadData, type RecipleModuleStartData, type RecipleModuleUnloadData } from '@reciple/core';
-import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
+import { CommandType, ContextMenuCommandBuilder, MessageCommandBuilder, SlashCommandBuilder, Utils, type AnyCommandBuilder, type AnyCommandExecuteData, type RecipleClient, type RecipleModuleData, type RecipleModuleLoadData, type RecipleModuleStartData, type RecipleModuleUnloadData } from '@reciple/core';
+import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 import { kleur, type Logger, type PackageJson } from 'fallout-utility';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DevCommandPrecondition } from './DevCommandPrecondition.js';
 import type { RecipleDevCommandModuleData } from '../types/DevCommandModule.js';
-import { ApplicationCommandType, PermissionsBitField, type ApplicationCommand, type Collection } from 'discord.js';
-import type { RecipleDevCommandsPermissionsCache } from '../types/structures.js';
 
 export interface RecipleDevCommandsOptions {
+    allowExecuteInDms?: boolean;
     allowExecuteInNonDevGuild?: boolean;
+    allowNonDevUserExecuteInDevGuild?: boolean;
     devGuilds?: (string|{ id: string; })[];
+    devUsers?: (string|{ id: string; })[];
     logger?: Logger;
 }
 
@@ -23,22 +24,27 @@ const packageJson: PackageJson = JSON.parse(await readFile(path.join(path.dirnam
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })
 export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommandsOptions {
-    public precondition: DevCommandPrecondition = new DevCommandPrecondition({ devCommandManager: this });
+    public precondition: DevCommandPrecondition = new DevCommandPrecondition({ manager: this });
+    public allowExecuteInDms: boolean;
     public allowExecuteInNonDevGuild: boolean;
+    public allowNonDevUserExecuteInDevGuild: boolean;
     public devGuilds: string[] = [];
+    public devUsers: string[] = [];
     public client!: RecipleClient;
     public logger?: Logger;
 
     public commands: AnyCommandBuilder[] = [];
-    public commandPermissions: RecipleDevCommandsPermissionsCache[] = [];
 
     get applicationCommands() {
         return this.commands.filter(command => !command.isMessageCommand());
     }
 
     constructor(options?: RecipleDevCommandsOptions) {
+        this.allowExecuteInDms = options?.allowExecuteInDms ?? true;
         this.allowExecuteInNonDevGuild = options?.allowExecuteInNonDevGuild ?? true;
+        this.allowNonDevUserExecuteInDevGuild = options?.allowNonDevUserExecuteInDevGuild ?? true;
         this.devGuilds = options?.devGuilds?.map(guild => typeof guild === 'string' ? guild : guild.id).filter(Boolean) ?? [];
+        this.devUsers = options?.devUsers?.map(user => typeof user === 'string' ? user : user.id).filter(Boolean) ?? [];
         this.logger = options?.logger;
     }
 
@@ -58,69 +64,11 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
             const commands = RecipleDevCommands.getModuleDevCommands(module.data);
             if (!commands.length) continue;
 
-            permissionCacheLoop: for (const command of commands) {
-                if (command.isMessageCommand() || this.allowExecuteInNonDevGuild) continue permissionCacheLoop;
-
-                const requiredMemberPermissions = command.required_member_permissions;
-                const defaultMemberPermissions = command.default_member_permissions;
-
-                if (!requiredMemberPermissions && !defaultMemberPermissions) continue permissionCacheLoop;
-
-                this.commandPermissions.push({
-                    command: command.name,
-                    type: command.type ?? ApplicationCommandType.ChatInput,
-                    required_member_permissions: typeof requiredMemberPermissions !== 'undefined'
-                        ? new PermissionsBitField(requiredMemberPermissions)
-                        : undefined,
-                    default_member_permissions: typeof defaultMemberPermissions !== 'undefined' && defaultMemberPermissions !== null
-                        ? new PermissionsBitField(
-                            typeof defaultMemberPermissions === 'string'
-                                ? BigInt(defaultMemberPermissions)
-                                : defaultMemberPermissions
-                            )
-                        : undefined
-                });
-
-                command.setDefaultMemberPermissions('0');
-                command.setRequiredMemberPermissions('0');
-            }
-
             this.commands.push(...commands);
             this.logger?.log(`Loaded (${commands.length}) dev command(s) from ${kleur.green(module.displayName)}`);
         }
 
         this.logger?.log(`Loaded (${this.commands.length}) dev command(s) from ${kleur.green(client.modules.cache.size)} modules`);
-    }
-
-    @setClientEvent('recipleRegisterApplicationCommands')
-    public async handleRegisterApplicationCommands(commands: Collection<string, ApplicationCommand>): Promise<void> {
-        if (!this.commandPermissions.length || this.allowExecuteInNonDevGuild) return;
-
-        const builders = this.applicationCommands;
-
-        devGuildLoop: for (const guildId of this.devGuilds) {
-            const guild = await this.client.guilds.fetch(guildId).catch(() => null);
-            if (!guild) continue devGuildLoop;
-
-            const applicationCommands = await guild.commands.fetch().catch(() => null);
-            if (!applicationCommands?.size) continue devGuildLoop;
-
-            applicationCommandLoop: for (const [id, applicationCommand] of applicationCommands) {
-                const builder = builders.find(c => !c.isMessageCommand() && c.name === applicationCommand.name && c.type === applicationCommand.type);
-                const permissionCache = this.commandPermissions.find(c => c.command === id && c.type === applicationCommand.type);
-                if (!builder || !permissionCache || builder.isMessageCommand()) continue applicationCommandLoop;
-
-                const requiredMemberPermissions = permissionCache.required_member_permissions;
-                const defaultMemberPermissions = permissionCache.default_member_permissions;
-
-                builder.setDefaultMemberPermissions(defaultMemberPermissions?.bitfield);
-                builder.setRequiredBotPermissions(requiredMemberPermissions?.bitfield ?? null);
-
-                await applicationCommand.edit({
-                    defaultMemberPermissions: defaultMemberPermissions
-                }).catch(() => null);
-            }
-        }
     }
 
     @setRecipleModuleUnload()
@@ -144,5 +92,30 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
         }
 
         return commands;
+    }
+
+    public isDevCommand(name: string, type: CommandType): boolean {
+        return this.commands.some(devCommand => devCommand.name === name && devCommand.command_type === type);
+    }
+
+    public async isExecutable(data: AnyCommandExecuteData): Promise<boolean> {
+        const user = data.type === CommandType.MessageCommand ? data.message.author : data.interaction.user;
+        const channelId = data.type === CommandType.MessageCommand ? data.message.channelId : data.interaction.channelId;
+
+        const channel = await this.client.channels.fetch(channelId).catch(() => null);
+        if (!channel) return false;
+
+        if (channel.isDMBased()) {
+            return this.devUsers.includes(user.id) ? this.allowExecuteInDms : false;
+        }
+
+        const guild = channel.guild;
+        const isDevUser = this.devUsers.includes(user.id);
+        const isDevGuild = this.devGuilds.includes(guild.id);
+
+        if (isDevUser && !isDevGuild) return this.allowExecuteInNonDevGuild;
+        if (!isDevUser && isDevGuild) return this.allowNonDevUserExecuteInDevGuild;
+
+        return false;
     }
 }
