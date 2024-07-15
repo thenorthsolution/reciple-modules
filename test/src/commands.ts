@@ -1,14 +1,14 @@
 import { CommandType, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
 import { setMessageCommand, setRecipleModule, setRecipleModuleStart, setSlashCommand } from '@reciple/decorators';
 import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions, type ButtonInteraction } from 'discord.js';
-import { InteractionListenerType, registerInteractionListeners, setInteractionEvent } from 'reciple-interaction-events';
+import { InteractionListenerType, setRegisterInteractionEvents, setInteractionEvent } from 'reciple-interaction-events';
 
 @setRecipleModule({
     id: 'com.reciple.commands'
 })
 export class Module implements RecipleModuleData {
     @setRecipleModuleStart()
-    @registerInteractionListeners()
+    @setRegisterInteractionEvents()
     async onStart(): Promise<boolean> {
         return true;
     }
@@ -36,6 +36,7 @@ export class Module implements RecipleModuleData {
     async pingRefresh(interaction: ButtonInteraction): Promise<void> {
         await interaction.deferUpdate();
         await interaction.message.edit(this.createPingMessageOptions(interaction.client.ws.ping));
+        throw new Error('Test Error');
     }
 
     createPingMessageOptions(ping: number): BaseMessageOptions {
