@@ -7,5 +7,5 @@ export interface RecipleInteractionListenerModule extends RecipleModuleData {
 }
 
 export interface RecipleInteractionListenerModuleMetadata {
-    interactionEvents?: AnyInteractionListener[];
+    interactionListeners?: AnyInteractionListener[];
 }

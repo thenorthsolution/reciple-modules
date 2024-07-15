@@ -17,11 +17,13 @@ export enum InteractionListenerHaltReason {
     MissingBotPermissions = 7,
 }
 
+export type AnyInteractionListenerHaltData<T extends BaseInteraction = BaseInteraction> = InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>|InteractionListenerCooldownHaltData<T>;
+
 export interface InteractionListener<T extends BaseInteraction> {
     type: InteractionListenerType;
     cooldown?: number;
     execute: (interaction: T) => Awaitable<void>;
-    halt?: (data: InteractionListenerErrorHaltData<T>|InteractionListenerMissingPermissionsHaltData<T>|InteractionListenerCooldownHaltData<T>) => Awaitable<boolean|void>;
+    halt?: (data: AnyInteractionListenerHaltData<T>) => Awaitable<boolean|void>;
     requiredMemberPermissions?: PermissionResolvable;
     requiredBotPermissions?: PermissionResolvable;
     commandName?: string|((interaction: T) => Awaitable<boolean>);
