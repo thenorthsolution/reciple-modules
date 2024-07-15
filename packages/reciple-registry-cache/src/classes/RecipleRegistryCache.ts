@@ -1,18 +1,18 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenuApplicationCommandsJSONBody, isJSONEncodable } from 'discord.js';
+import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 import { RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import type { DevCommandManager } from 'reciple-dev-commands';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { readFileSync } from 'node:fs';
 import { createHash, randomBytes } from 'node:crypto';
+import { existsAsync } from '@reciple/utils';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { inspect } from 'node:util';
 import path from 'node:path';
-import { existsAsync } from '@reciple/utils';
-import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
 export type RESTPostAPICommand = RESTPostAPIChatInputApplicationCommandsJSONBody|RESTPostAPIContextMenuApplicationCommandsJSONBody;
 
-export interface RegistryCacheManagerOptions {
+export interface RecipleRegistryCacheOptions {
     /**
      * @default "./node_modules/.cache/reciple-registry-cache/"
      */
@@ -30,7 +30,7 @@ export interface RegistryCacheContent {
     createdAt: string;
 }
 
-export interface RegistryCacheManager extends RecipleModuleData, RegistryCacheManagerOptions {
+export interface RecipleRegistryCache extends RecipleModuleData, RecipleRegistryCacheOptions {
     id: string;
     name: string;
     versions: string;
@@ -43,7 +43,7 @@ const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })
-export class RegistryCacheManager implements RecipleModuleData, RegistryCacheManagerOptions {
+export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryCacheOptions {
     public static cacheFolder = path.join(process.cwd(), './node_modules/.cache/reciple-registry-cache/');
 
     private _isCommandsCached: boolean = false;
@@ -51,7 +51,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
     private _loggedWarning: boolean = false;
 
     public devCommandsManager?: DevCommandManager;
-    public cacheFolder: string = RegistryCacheManager.cacheFolder;
+    public cacheFolder: string = RecipleRegistryCache.cacheFolder;
     public maxCacheAgeMs?: number = 86400000;
     public client!: RecipleClient<true>;
 
@@ -62,11 +62,11 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         return path.join(this.cacheFolder, this.client.user?.id ?? randomBytes(10).toString('hex'));
     }
 
-    get isCommandsCached() {
+    get isCached() {
         return this._isCommandsCached;
     }
 
-    constructor(options?: RegistryCacheManagerOptions) {
+    constructor(options?: RecipleRegistryCacheOptions) {
         this.cacheFolder = options?.cacheFolder ?? this.cacheFolder;
     }
 
@@ -74,7 +74,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client as RecipleClient<true>;
 
-        if (this.cacheFolder === RegistryCacheManager.cacheFolder) {
+        if (this.cacheFolder === RecipleRegistryCache.cacheFolder) {
             const cli = await import('reciple').then(r => r.cli).catch(() => null);
 
             if (cli) this.cacheFolder = path.join(cli.cwd, './node_modules/.cache/reciple-registry-cache/');
@@ -109,15 +109,14 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         if (this.client.config.applicationCommandRegister?.enabled === false) return;
 
         const commands = [
-            ...this.client.commands.contextMenuCommands.values(),
-            ...this.client.commands.slashCommands.values(),
+            ...this.client.commands.applicationCommands.values(),
             ...devCommands
         ].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
         const data = await this.encodeCommandsData(commands);
 
-        if (await this.isEqualToCache(data)) {
-            if (!this._loggedWarning) this.client.logger?.warn(`Application commands did not change! Skipping command register...`);
+        if (await this.isCacheAvailable(data)) {
+            if (!this._loggedWarning) this.client.logger?.warn(`(${commands.length}) Application commands did not change! Skipping command register...`);
 
             this.client.config.applicationCommandRegister = {
                 ...this.client.config.applicationCommandRegister,
@@ -146,7 +145,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         return {
             clientId: this.client.user.id,
             data: hex,
-            hash: RegistryCacheManager.createHash(hex),
+            hash: RecipleRegistryCache.createHash(hex),
             createdAt: new Date().toISOString(),
         };
     }
@@ -157,7 +156,7 @@ export class RegistryCacheManager implements RecipleModuleData, RegistryCacheMan
         return hash.digest('hex');
     }
 
-    public async isEqualToCache(data: RegistryCacheContent): Promise<boolean> {
+    public async isCacheAvailable(data: RegistryCacheContent): Promise<boolean> {
         this.lastRegistryCheck = new Date();
 
         const cached = await this.resolveLastCache();
