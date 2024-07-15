@@ -34,9 +34,6 @@
             "optional": true
         }
     },
-    "optionalDependencies": {
-        "reciple-dev-commands": "^3.3.0"
-    },
     "dependencies": {
         "@reciple/decorators": "^9.1.3",
         "@reciple/utils": "^9.3.1"

@@ -37,8 +37,5 @@
         "@reciple/core": {
             "optional": true
         }
-    },
-    "optionalDependencies": {
-        "reciple-registry-cache": "^3.3.0"
     }
 }

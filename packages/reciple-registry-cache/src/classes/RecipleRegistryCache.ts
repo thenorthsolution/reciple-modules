@@ -1,7 +1,6 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenuApplicationCommandsJSONBody, isJSONEncodable } from 'discord.js';
 import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
-import type { RecipleDevCommands } from 'reciple-dev-commands';
-import { RecipleClient, RecipleModuleData, RecipleModuleStartData, type RecipleModule } from '@reciple/core';
+import { RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash, randomBytes } from 'node:crypto';
 import { existsAsync } from '@reciple/utils';
@@ -94,7 +93,7 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
 
         const commands = Array.from(this.client.commands.applicationCommands.values()).map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
-        const data = await this.encodeCommandsData(commands, (await this.getDevCommands())?.devGuilds);
+        const data = await this.encodeCommandsData(commands);
 
         if (await this.isCacheAvailable(data)) {
             if (!this._loggedWarning) this.client.logger?.warn(`(${commands.length}) Application commands did not change! Skipping command register...`);
@@ -111,14 +110,13 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
         await this.updateLastCache(data);
     }
 
-    public async encodeCommandsData(commands: RESTPostAPICommand[], devGuilds?: string[]): Promise<RegistryCacheContent> {
+    public async encodeCommandsData(commands: RESTPostAPICommand[]): Promise<RegistryCacheContent> {
         const data = {
             contextMenuCommands: this.client.config.commands?.contextMenuCommand,
             slashCommands: this.client.config.commands?.slashCommand,
             applicationCommandRegister: this.client.config.applicationCommandRegister,
             userId: this.client.user?.id,
-            commands: commands.map(c => Buffer.from(inspect(c, { depth: 10 })).toString('hex')),
-            devGuilds: devGuilds ?? [],
+            commands: commands.map(c => Buffer.from(inspect(c, { depth: 10 })).toString('hex'))
         };
 
         const hex = Buffer.from(JSON.stringify(data)).toString('hex');
@@ -157,10 +155,6 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
         } catch (err) {
             return null;
         }
-    }
-
-    public async getDevCommands(): Promise<RecipleDevCommands|undefined> {
-        return (this.client.modules.cache.find(m => m.id === 'org.reciple.js.dev-commands') as RecipleModule<RecipleDevCommands>|undefined)?.data;
     }
 
     public static createHash(data: string): string {
