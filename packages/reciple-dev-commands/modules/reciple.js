@@ -1,3 +1,10 @@
-import { DevCommandManager } from 'reciple-dev-commands';
+import { RecipleDevCommands } from 'reciple-dev-commands';
 
-export default new DevCommandManager({});
+export default new RecipleDevCommands({
+    allowExecuteInDms: true,
+    allowExecuteInNonDevGuild: true,
+    allowNonDevUserExecuteInDevGuild: false,
+    devGuilds: [],
+    devUsers: [],
+    logger: undefined
+});
