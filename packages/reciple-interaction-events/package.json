@@ -27,7 +27,7 @@
         "prepack": "npm run build"
     },
     "peerDependencies": {
-        "@reciple/core": "^9.4.0"
+        "@reciple/core": "^9.4.1"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
@@ -35,6 +35,6 @@
         }
     },
     "dependencies": {
-        "@reciple/decorators": "^9.1.1"
+        "@reciple/decorators": "^9.1.3"
     }
 }

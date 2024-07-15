@@ -1,1 +1,1 @@
-export const interactionEventListenerModuleMetadataSymbol = Symbol('interactionEvents');
+export const interactionEventListenerModuleMetadataSymbol = Symbol('interactionListeners');

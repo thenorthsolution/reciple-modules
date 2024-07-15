@@ -1,14 +1,23 @@
-import { CommandType, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
+import { CommandType, SlashCommandBuilder, type AnyCommandBuilder, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
 import { setMessageCommand, setRecipleModule, setRecipleModuleStart, setSlashCommand } from '@reciple/decorators';
 import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions, type ButtonInteraction } from 'discord.js';
-import { InteractionListenerType, registerInteractionListeners, setInteractionEvent } from 'reciple-interaction-events';
+import { InteractionListenerType, setRegisterInteractionEvents, setInteractionEvent } from 'reciple-interaction-events';
 
 @setRecipleModule({
     id: 'com.reciple.commands'
 })
 export class Module implements RecipleModuleData {
+    public devCommands: AnyCommandBuilder[] = [
+        new SlashCommandBuilder()
+            .setName('dev-command')
+            .setDescription('Dev command')
+            .setExecute(async ({ interaction }) => {
+                await interaction.reply(`Hello, world ${interaction.user}!`);
+            })
+    ]
+
     @setRecipleModuleStart()
-    @registerInteractionListeners()
+    @setRegisterInteractionEvents()
     async onStart(): Promise<boolean> {
         return true;
     }
@@ -36,6 +45,7 @@ export class Module implements RecipleModuleData {
     async pingRefresh(interaction: ButtonInteraction): Promise<void> {
         await interaction.deferUpdate();
         await interaction.message.edit(this.createPingMessageOptions(interaction.client.ws.ping));
+        throw new Error('Test Error');
     }
 
     createPingMessageOptions(ping: number): BaseMessageOptions {
