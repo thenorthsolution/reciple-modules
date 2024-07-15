@@ -9,10 +9,19 @@ npm i reciple-interaction-events
 ```
 
 ```js
-// New module instance
-import { InteractionEventManager } from 'reciple-interaction-events';
+import { RecipleInteractionEvents } from 'reciple-interaction-events';
 
-export default new InteractionEventManager();
+export default new RecipleInteractionEvents({
+    defaultHalt: data => {
+        /**
+         * Handle halt of interaction listeners
+         * Return false if handling failed, true if it's handled.
+         */
+    },
+
+    // Custom logger instance
+    logger: undefined
+});
 ```
 
 

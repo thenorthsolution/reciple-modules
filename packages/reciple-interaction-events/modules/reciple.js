@@ -7,5 +7,7 @@ export default new RecipleInteractionEvents({
          * Return false if handling failed, true if it's handled.
          */
     },
+
+    // Custom logger instance
     logger: undefined
 });
