@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DevCommandPrecondition } from './DevCommandPrecondition.js';
-import type { RecipleDevCommandModuleData } from '../types/DevCommandModule.js';
+import type { RecipleDevCommandModuleData } from '../types/structures.js';
 
 export interface RecipleDevCommandsOptions {
     allowExecuteInDms?: boolean;
