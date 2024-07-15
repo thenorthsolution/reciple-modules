@@ -9,7 +9,7 @@
     "dev": "nodemon --ext ts,mts,json --ignore ./modules --exec \"npm run build && reciple -c reciple.mjs\" --signal SIGHUP"
   },
   "dependencies": {
-    "@reciple/decorators": "^9.1.2",
+    "@reciple/decorators": "^9.1.3",
     "reciple-anticrash": "*",
     "reciple-dev-commands": "*",
     "reciple-interaction-events": "*",
