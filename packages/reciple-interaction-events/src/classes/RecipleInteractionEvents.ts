@@ -1,6 +1,6 @@
 import { AnyCommandInteraction, AnyCommandInteractionListener, AnyComponentInteraction, AnyComponentInteractionListener, AnyInteractionListener, InteractionListenerHaltReason, InteractionListenerType, type AnyInteractionListenerHaltData, type InteractionListener } from '../types/listeners.js';
 import { CommandPermissionsPrecondition, CooldownData, Logger, RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
-import { RecipleInteractionListenerModule } from '../types/RecipleInteractionListenerModule.js';
+import { RecipleInteractionEventsModuleData } from '../types/RecipleInteractionEventsModuleData.js';
 import { GuildTextBasedChannel, PermissionsBitField, isJSONEncodable, type Interaction } from 'discord.js';
 import { InteractionEventListenerError } from './InteractionEventListenerError.js';
 import { fileURLToPath } from 'node:url';
@@ -54,7 +54,7 @@ export class RecipleInteractionEvents implements RecipleModuleData, RecipleInter
 
     @setClientEvent('interactionCreate')
     public async emitInteraction(interaction: Parameters<AnyInteractionListener['execute']>[0]): Promise<void> {
-        let scripts: RecipleInteractionListenerModule[] = this.client.modules.cache.map(s => s.data as RecipleInteractionListenerModule);
+        let scripts: RecipleInteractionEventsModuleData[] = this.client.modules.cache.map(s => s.data as RecipleInteractionEventsModuleData);
 
         const commandType = RecipleInteractionEvents.getInteractionListenerType(interaction);
 

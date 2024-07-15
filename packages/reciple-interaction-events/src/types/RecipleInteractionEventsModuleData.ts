@@ -2,7 +2,7 @@ import { RecipleModuleData } from '@reciple/core';
 import { AnyInteractionListener } from './listeners.js';
 import { JSONEncodable } from 'discord.js';
 
-export interface RecipleInteractionListenerModule extends RecipleModuleData {
+export interface RecipleInteractionEventsModuleData extends RecipleModuleData {
     interactionListeners?: (AnyInteractionListener|JSONEncodable<AnyInteractionListener>)[];
 }
 

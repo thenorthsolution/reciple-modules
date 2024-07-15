@@ -1,6 +1,6 @@
 import { interactionEventListenerModuleMetadataSymbol } from '../types/constants.js';
 import type { InteractionListenerGuard, InteractionListenerType } from '../types/listeners.js';
-import type { RecipleInteractionListenerModule, RecipleInteractionListenerModuleMetadata } from '../types/RecipleInteractionListenerModule.js';
+import type { RecipleInteractionEventsModuleData, RecipleInteractionListenerModuleMetadata } from '../types/RecipleInteractionEventsModuleData.js';
 
 /**
  * Registers the interaction event listeners for the module
@@ -21,7 +21,7 @@ export function setRegisterInteractionEvents() {
         const originalValue = descriptor?.value;
         if (!descriptor?.value || typeof originalValue !== 'function') throw new Error(`@registerInteractionListeners must be used on a method`);
 
-        descriptor.value = function(this: RecipleInteractionListenerModule & { [interactionEventListenerModuleMetadataSymbol]: RecipleInteractionListenerModuleMetadata; }, ...args: any[]) {
+        descriptor.value = function(this: RecipleInteractionEventsModuleData & { [interactionEventListenerModuleMetadataSymbol]: RecipleInteractionListenerModuleMetadata; }, ...args: any[]) {
             const metadata = this[interactionEventListenerModuleMetadataSymbol] ?? { interactionListeners: [] };
 
             metadata.interactionListeners ??= [];
