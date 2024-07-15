@@ -11,6 +11,7 @@ export interface RecipleDevCommandsOptions {
     allowExecuteInDms?: boolean;
     allowExecuteInNonDevGuild?: boolean;
     allowNonDevUserExecuteInDevGuild?: boolean;
+    deployInProduction?: boolean;
     devGuilds?: (string|{ id: string; })[];
     devUsers?: (string|{ id: string; })[];
     logger?: Logger;
@@ -34,6 +35,7 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
     public allowExecuteInDms: boolean;
     public allowExecuteInNonDevGuild: boolean;
     public allowNonDevUserExecuteInDevGuild: boolean;
+    public deployInProduction: boolean;
     public devGuilds: string[] = [];
     public devUsers: string[] = [];
     public client!: RecipleClient;
@@ -49,6 +51,7 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
         this.allowExecuteInDms = options?.allowExecuteInDms ?? true;
         this.allowExecuteInNonDevGuild = options?.allowExecuteInNonDevGuild ?? true;
         this.allowNonDevUserExecuteInDevGuild = options?.allowNonDevUserExecuteInDevGuild ?? true;
+        this.deployInProduction = options?.deployInProduction ?? false;
         this.devGuilds = options?.devGuilds?.map(guild => typeof guild === 'string' ? guild : guild.id).filter(Boolean) ?? [];
         this.devUsers = options?.devUsers?.map(user => typeof user === 'string' ? user : user.id).filter(Boolean) ?? [];
         this.logger = options?.logger;
@@ -70,7 +73,7 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
             const commands = RecipleDevCommands.getModuleDevCommands(module.data);
             if (!commands.length) continue;
 
-            this.commands.push(...commands);
+            if (!this.isProduction) this.commands.push(...commands);
             this.logger?.log(`Loaded (${commands.length}) dev command(s) from ${kleur.green(module.displayName)}`);
         }
 
@@ -123,5 +126,9 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
         if (!isDevUser && isDevGuild) return this.allowNonDevUserExecuteInDevGuild;
 
         return isDevUser && isDevGuild;
+    }
+
+    public isProduction(): boolean {
+        return process.env.NODE_ENV === 'production';
     }
 }
