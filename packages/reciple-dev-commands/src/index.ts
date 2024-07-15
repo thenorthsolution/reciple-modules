@@ -1,1 +1,1 @@
-export * from './classes/DevCommandManager.js';
+export * from './classes/RecipleDevCommands.js';

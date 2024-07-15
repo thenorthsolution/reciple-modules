@@ -1,3 +1,3 @@
-import { DevCommandManager } from 'reciple-dev-commands';
+import { RecipleDevCommands } from 'reciple-dev-commands';
 
-export default new DevCommandManager();
+export default new RecipleDevCommands();

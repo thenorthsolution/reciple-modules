@@ -1,7 +1,6 @@
 import { AnyCommandBuilder, AnyCommandExecuteData, AnySlashCommandBuilder, CommandType, ContextMenuCommandBuilder, Logger, MessageCommandBuilder, MessageCommandExecuteOptions, RecipleClient, RecipleModuleData, RecipleModuleLoadData, RecipleModuleStartData, SlashCommandBuilder, Utils } from '@reciple/core';
-import { RecipleDevCommandModuleScript } from '../types/DevCommandModule.js';
+import { type RecipleDevCommandModuleData } from '../types/DevCommandModule.js';
 import { ApplicationCommand, Awaitable, Collection, type Interaction, type Message } from 'discord.js';
-import type { RegistryCacheManager } from 'reciple-registry-cache';
 import { getCommand, type PackageJson } from 'fallout-utility';
 import { fileURLToPath } from 'node:url';
 import { readFileSync } from 'node:fs';
@@ -62,14 +61,6 @@ export class DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvent
     public allowExecuteInNonDevGuild: boolean;
     public ignoreCommandsCacheRegister: boolean;
 
-    public registryCacheManager: RegistryCacheManager|null = null;
-
-    get isCommandsCached() {
-        if (this.registryCacheManager === null) return false;
-
-        return this.registryCacheManager.isCommandsCached;
-    }
-
     set argSeparator(value: string|undefined|null) { this._argSeparator = value || undefined; }
 
     constructor(options?: DevCommandManagerOptions) {
@@ -95,13 +86,6 @@ export class DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvent
 
     @setRecipleModuleLoad()
     public async onLoad({ client }: RecipleModuleLoadData): Promise<void> {
-        const RegistryCacheManager = await import('reciple-registry-cache').then(data => data.RegistryCacheManager).catch(() => null);
-
-        if (RegistryCacheManager) {
-            const registryCacheManagerModule = client.modules.cache.find(m => m.data instanceof RegistryCacheManager && m.id === 'com.reciple.registry-cache');
-            this.registryCacheManager = registryCacheManagerModule?.data as RegistryCacheManager ?? null;
-        }
-
         for (const [id, mdule] of client.modules.cache) {
             const devCommands = await this.getModuleDevCommands(mdule.data);
 
@@ -123,16 +107,8 @@ export class DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvent
         const applicationCommands = [...this.contextMenuCommands.values(), ...this.slashCommands.values()];
 
         client.modules.once('loadedModules', async () => {
-            await new Promise((res, rej) => {
-                let timer: NodeJS.Timeout = setTimeout(() => {
-                    if (this.registryCacheManager && this.registryCacheManager.lastRegistryCheck === null) return;
-                    if (timer) clearTimeout(timer);
 
-                    res(this.isCommandsCached);
-                }, 100);
-            });
-
-            if (!this.isCommandsCached) {
+            if (true) {
                 const configGuilds = new Set(
                     ...(this.client.config.applicationCommandRegister?.registerToGuilds ?? []),
                     ...(this.client.config.commands?.contextMenuCommand?.registerCommands?.registerToGuilds ?? []),
@@ -231,7 +207,7 @@ export class DevCommandManager extends StrictTypedEmitter<DevCommandManagerEvent
         }
     }
 
-    public async getModuleDevCommands(script: RecipleDevCommandModuleScript): Promise<AnyCommandBuilder[]> {
+    public async getModuleDevCommands(script: RecipleDevCommandModuleData): Promise<AnyCommandBuilder[]> {
         const commands: AnyCommandBuilder[] = [];
         if (!script?.devCommands) return commands;
 

@@ -1,3 +1,3 @@
-import { RegistryCacheManager } from 'reciple-registry-cache';
+import { RecipleRegistryCache } from 'reciple-registry-cache';
 
-export default new RegistryCacheManager();
+export default new RecipleRegistryCache();

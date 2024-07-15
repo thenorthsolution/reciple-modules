@@ -1,7 +1,6 @@
 import { RESTPostAPIChatInputApplicationCommandsJSONBody, RESTPostAPIContextMenuApplicationCommandsJSONBody, isJSONEncodable } from 'discord.js';
 import { setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 import { RecipleClient, RecipleModuleData, RecipleModuleStartData } from '@reciple/core';
-import type { DevCommandManager } from 'reciple-dev-commands';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createHash, randomBytes } from 'node:crypto';
 import { existsAsync } from '@reciple/utils';
@@ -47,10 +46,8 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
     public static cacheFolder = path.join(process.cwd(), './node_modules/.cache/reciple-registry-cache/');
 
     private _isCommandsCached: boolean = false;
-    private _DevCommandManager: typeof DevCommandManager|null = null;
     private _loggedWarning: boolean = false;
 
-    public devCommandsManager?: DevCommandManager;
     public cacheFolder: string = RecipleRegistryCache.cacheFolder;
     public maxCacheAgeMs?: number = 86400000;
     public client!: RecipleClient<true>;
@@ -85,9 +82,6 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
 
     @setRecipleModuleLoad()
     public async onLoad(): Promise<void> {
-        const DevCommandManager = await import('reciple-dev-commands').then(data => data.DevCommandManager).catch(() => null);
-        this._DevCommandManager = DevCommandManager ?? null;
-
         await this.checkRegistryCache();
     }
 
@@ -95,23 +89,9 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
     public async onUnload(): Promise<void> {}
 
     public async checkRegistryCache(): Promise<void> {
-        let devCommands: RESTPostAPICommand[] = [];
-
-        if (this._DevCommandManager) {
-            const DevCommandManager = this._DevCommandManager;
-
-            const devCommandsModule = this.client.modules.cache.find(m => m.data instanceof DevCommandManager && m.data.id === 'com.reciple.dev-commands');
-            this.devCommandsManager = devCommandsModule?.data as DevCommandManager|undefined;
-
-            if (this.devCommandsManager) devCommands = [...this.devCommandsManager.contextMenuCommands.values(), ...this.devCommandsManager.slashCommands.values()].map(c => c.toJSON());
-        }
-
         if (this.client.config.applicationCommandRegister?.enabled === false) return;
 
-        const commands = [
-            ...this.client.commands.applicationCommands.values(),
-            ...devCommands
-        ].map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
+        const commands = Array.from(this.client.commands.applicationCommands.values()).map(c => isJSONEncodable(c) ? c.toJSON() : c as RESTPostAPICommand);
 
         const data = await this.encodeCommandsData(commands);
 
@@ -136,7 +116,6 @@ export class RecipleRegistryCache implements RecipleModuleData, RecipleRegistryC
             slashCommands: this.client.config.commands?.slashCommand,
             applicationCommandRegister: this.client.config.applicationCommandRegister,
             userId: this.client.user?.id,
-            devCommandsGuilds: this.devCommandsManager?.devGuilds ?? [],
             commands: commands.map(c => Buffer.from(inspect(c, { depth: 10 })).toString('hex'))
         };
 
