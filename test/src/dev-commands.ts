@@ -5,6 +5,6 @@ export default new RecipleDevCommands({
     allowExecuteInNonDevGuild: true,
     allowNonDevUserExecuteInDevGuild: false,
     devGuilds: ['876039624814899220'],
-    devUsers: [],
+    devUsers: ['749120018771345488'],
     logger: undefined
 });

@@ -122,6 +122,6 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
         if (isDevUser && !isDevGuild) return this.allowExecuteInNonDevGuild;
         if (!isDevUser && isDevGuild) return this.allowNonDevUserExecuteInDevGuild;
 
-        return false;
+        return true;
     }
 }
