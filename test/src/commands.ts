@@ -11,7 +11,6 @@ export class Module implements RecipleModuleData {
         new SlashCommandBuilder()
             .setName('dev-command')
             .setDescription('Dev command')
-            .setRequiredMemberPermissions('ManageMessages')
             .setExecute(async ({ interaction }) => {
                 await interaction.reply(`Hello, world ${interaction.user}!`);
             })
