@@ -1,4 +1,4 @@
-import { CommandType, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
+import { CommandType, SlashCommandBuilder, type AnyCommandBuilder, type AnyCommandExecuteData, type RecipleModuleData } from 'reciple';
 import { setMessageCommand, setRecipleModule, setRecipleModuleStart, setSlashCommand } from '@reciple/decorators';
 import { ButtonBuilder, ButtonStyle, ComponentType, type BaseMessageOptions, type ButtonInteraction } from 'discord.js';
 import { InteractionListenerType, setRegisterInteractionEvents, setInteractionEvent } from 'reciple-interaction-events';
@@ -7,6 +7,16 @@ import { InteractionListenerType, setRegisterInteractionEvents, setInteractionEv
     id: 'com.reciple.commands'
 })
 export class Module implements RecipleModuleData {
+    public devCommands: AnyCommandBuilder[] = [
+        new SlashCommandBuilder()
+            .setName('dev-command')
+            .setDescription('Dev command')
+            .setRequiredMemberPermissions('ManageMessages')
+            .setExecute(async ({ interaction }) => {
+                await interaction.reply(`Hello, world ${interaction.user}!`);
+            })
+    ]
+
     @setRecipleModuleStart()
     @setRegisterInteractionEvents()
     async onStart(): Promise<boolean> {

@@ -82,7 +82,7 @@ export class RecipleDevCommands implements RecipleModuleData, RecipleDevCommands
                 });
 
                 command.setDefaultMemberPermissions('0');
-                command.setRequiredBotPermissions('0');
+                command.setRequiredMemberPermissions('0');
             }
 
             this.commands.push(...commands);
