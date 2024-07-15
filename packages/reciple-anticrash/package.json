@@ -27,7 +27,7 @@
         "prepack": "npm run build"
     },
     "dependencies": {
-        "@reciple/decorators": "^9.1.1",
+        "@reciple/decorators": "^9.1.2",
         "fallout-utility": "^2.9.1"
     },
     "peerDependencies": {

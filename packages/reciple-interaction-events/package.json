@@ -35,6 +35,6 @@
         }
     },
     "dependencies": {
-        "@reciple/decorators": "^9.1.1"
+        "@reciple/decorators": "^9.1.2"
     }
 }

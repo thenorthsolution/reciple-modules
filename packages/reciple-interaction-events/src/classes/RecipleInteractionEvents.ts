@@ -8,11 +8,12 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { setClientEvent, setRecipleModule, setRecipleModuleLoad, setRecipleModuleStart, setRecipleModuleUnload } from '@reciple/decorators';
 
-export interface InteractionEventManagerOptions {
+export interface RecipleInteractionEventsOptions {
     defaultHalt?: Exclude<InteractionListener<Interaction>['halt'], undefined>;
+    logger?: Logger;
 }
 
-export interface InteractionEventManager extends RecipleModuleData {
+export interface RecipleInteractionEvents extends RecipleModuleData {
     id: string;
     name: string;
     versions: string;
@@ -25,21 +26,22 @@ const packageJson: Record<string, any> = JSON.parse(readFileSync(path.join(path.
     name: packageJson.name,
     versions: packageJson.peerDependencies?.['@reciple/core'],
 })
-export class InteractionEventManager implements RecipleModuleData, InteractionEventManagerOptions {
+export class RecipleInteractionEvents implements RecipleModuleData, RecipleInteractionEventsOptions {
     public client!: RecipleClient;
     public logger?: Logger;
 
     public defaultHalt?: Exclude<InteractionListener<Interaction>['halt'], undefined>;
 
-    constructor(options?: InteractionEventManagerOptions) {
+    constructor(options?: RecipleInteractionEventsOptions) {
         this.emitInteraction = this.emitInteraction.bind(this);
         this.defaultHalt = options?.defaultHalt;
+        this.logger = options?.logger;
     }
 
     @setRecipleModuleStart()
     public async onStart({ client }: RecipleModuleStartData): Promise<boolean> {
         this.client = client;
-        this.logger = client.logger?.clone({ name: 'InteractionEventManager' });
+        this.logger ??= client.logger?.clone({ name: 'RecipleInteractionEvents' });
 
         return true;
     }
@@ -54,7 +56,7 @@ export class InteractionEventManager implements RecipleModuleData, InteractionEv
     public async emitInteraction(interaction: Parameters<AnyInteractionListener['execute']>[0]): Promise<void> {
         let scripts: RecipleInteractionListenerModule[] = this.client.modules.cache.map(s => s.data as RecipleInteractionListenerModule);
 
-        const commandType = InteractionEventManager.getInteractionListenerType(interaction);
+        const commandType = RecipleInteractionEvents.getInteractionListenerType(interaction);
 
         for (const script of scripts) {
             if (!script.interactionListeners?.length) continue;
@@ -67,9 +69,9 @@ export class InteractionEventManager implements RecipleModuleData, InteractionEv
 
                 try {
                     if (this.isAnyCommandInteractionListener(listener)) {
-                        if (!await InteractionEventManager.isCommandNameMatch(interaction as AnyCommandInteraction, listener)) continue;
+                        if (!await RecipleInteractionEvents.isCommandNameMatch(interaction as AnyCommandInteraction, listener)) continue;
                     } else if (this.isAnyComponentInteractionListener(listener)) {
-                        if (!await InteractionEventManager.isCustomIdMatch(interaction as AnyComponentInteraction, listener)) continue;
+                        if (!await RecipleInteractionEvents.isCustomIdMatch(interaction as AnyComponentInteraction, listener)) continue;
                     }
 
                     const channel = interaction.channelId ? await interaction.guild?.channels.fetch(interaction.channelId) as GuildTextBasedChannel : null;

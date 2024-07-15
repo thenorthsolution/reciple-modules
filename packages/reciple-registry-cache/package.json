@@ -23,11 +23,11 @@
     ],
     "scripts": {
         "clean": "npx rimraf ./dist",
-        "build": "npm run clean && npx tsc"
+        "build": "npm run clean && npx tsc",
+        "prepack": "npm run build"
     },
     "peerDependencies": {
-        "@reciple/core": "^9.4.0",
-        "prepack": "npm run build"
+        "@reciple/core": "^9.4.0"
     },
     "peerDependenciesMeta": {
         "@reciple/core": {
@@ -38,7 +38,7 @@
         "reciple-dev-commands": "^3.3.0"
     },
     "dependencies": {
-        "@reciple/decorators": "^9.1.1",
+        "@reciple/decorators": "^9.1.2",
         "@reciple/utils": "^9.3.1"
     }
 }
