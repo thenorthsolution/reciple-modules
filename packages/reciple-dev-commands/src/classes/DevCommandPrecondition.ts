@@ -6,11 +6,12 @@ export interface DevCommandPreconditionOptions {
 }
 
 export class DevCommandPrecondition implements CommandPreconditionData {
-    public id: string = 'org.reciple.js.dev-command-precondition';
+    public id: string;
 
     private manager: RecipleDevCommands;
 
     constructor(options: DevCommandPreconditionOptions) {
+        this.id = options.manager.id;
         this.manager = options.manager;
     }
 

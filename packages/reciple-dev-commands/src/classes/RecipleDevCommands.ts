@@ -16,6 +16,12 @@ export interface RecipleDevCommandsOptions {
     logger?: Logger;
 }
 
+export interface RecipleDevCommands extends RecipleModuleData, RecipleDevCommandsOptions {
+    id: string;
+    name: string;
+    versions: string;
+}
+
 const packageJson: PackageJson = JSON.parse(await readFile(path.join(path.dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf-8'))
 
 @setRecipleModule({
